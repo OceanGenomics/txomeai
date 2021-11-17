@@ -1,0 +1,9 @@
+export("txomeai_connect", "txomeai_get",
+       "txomeai_get_all", "txomeai_login", "txomeai_ls",
+       "txomeai_update_glossary")
+import(data.table)
+importFrom(httr, GET, POST, write_disk)
+importFrom(urltools, url_parse, url_compose)
+importFrom(jsonlite, fromJSON)
+importFrom(getPass, getPass)
+importFrom(utils, read.csv)
