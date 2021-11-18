@@ -20,40 +20,18 @@ The connection object returned by txomeai_connect.
 }
   \item{tableName}{
 %%     ~~Describe \code{tableName} here~~
-A string that matches the name column in txomeai_ls.
+A string that matches the 'name' column in txomeai_ls.
 }
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-details
 }
 \value{
 A data.table or list with all query results.
-}
-\references{
-%% ~put references to the literature/web site here ~
-referneces
-}
-\author{
-%%  ~~who you are~~
-Joshua P. Katz
-}
-\note{
-%%  ~~further notes~~
-note
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-seealso
+  \item{list}{A list with keys as the name and the raw query data.}
+  \item{data.table}{A data.table with all non-empty results and a key column.}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-report = txomeai_connect("https://txomeai.oceangenomics.com/api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html", dir = ".")
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
 report_ls = txomeai_ls(report)
 report_sv = txomeai_get_all(report, "StructuralVariants")
 }

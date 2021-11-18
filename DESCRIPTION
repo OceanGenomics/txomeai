@@ -1,11 +1,11 @@
 Package: txomeai
 Type: Package
-Title: API access to Ocean Genomics TxomeAI analysis data
+Title: API access to Ocean Genomics txome.ai RNA-Analysis
 Version: 1.0
 Date: 2021-11-16
 Author: Joshua P. Katz
 Maintainer: Ocean Genomics <support@oceangenomics.com>
-Description: This package is the API interface to TxomeAI RNA-Analysis reports.
+Description: This package is the API interface to txome.ai RNA-Analysis reports.
 License: MIT + file LICENSE
-Imports: getPass, httr, urltools, jsonlite
-Depends: data.table
+Imports: getPass, urltools, jsonlite
+Depends: data.table, httr

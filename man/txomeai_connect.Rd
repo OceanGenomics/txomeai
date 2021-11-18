@@ -7,9 +7,7 @@ Build a connection object to an analysis report
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-Build the connection object to a report used to access all data from the report.
-The list returned from this function is used for all API operations but it not specifically useful to the user.
-This function also requires user interaction to input username and password.
+Builds the connection object to a report used for all queries.
 }
 \usage{
 txomeai_connect(url, dir = ".")
@@ -23,15 +21,23 @@ A string with the url of the report to connect to.
   \item{dir}{
 %%     ~~Describe \code{dir} here~~
 The local directory path to save cached data to.
-Delete this directory if you want your API queries to re-run, this should only be required very rarely. 
+Change or delete this directory if you want your API queries to re-run, this should only be required very rarely. 
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-details
+This function requires user interaction to input your https://txomeai.oceangenomics.com/ username and password.
 }
 \value{
-    The return value of this function is unimportant to the user.
+  The list returned from this function is used for all API operations and is generally not useful to the user.
+  \item{url}{The URL used to access the API data.}
+  \item{CAS}{The ID of the analysis.}
+  \item{instance}{The ID of the report.}
+  \item{dir}{The path to the query save location.}
+  \item{data}{A table of all the report page results.}
+  \item{meta}{A list of tables associated to each report page.}
+  \item{sample}{A list of tables associated to each report page.}
+  \item{ls}{A summary table of all the available data.}
 }
 \references{
 https://txomeai.oceangenomics.com/
@@ -40,22 +46,10 @@ https://txomeai.oceangenomics.com/
 %%  ~~who you are~~
 Joshua P. Katz
 }
-\note{
-%%  ~~further notes~~
-note
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-seealso
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-report = txomeai_connect("https://txomeai.oceangenomics.com/api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html")
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

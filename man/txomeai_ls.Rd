@@ -6,7 +6,6 @@
 This function returns a table of all available data in the report
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
 Returns a table with columns key, name, and description.
 Each row represents a data query available in the report. 
 }
@@ -15,44 +14,19 @@ txomeai_ls(txomeai)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{txomeai}{
-%%     ~~Describe \code{txomeai} here~~
-The report connection object
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-details
+  \item{txomeai}{The report connection object}
 }
 \value{
   A data.table that each row represents a data query from the report.
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 }
 \references{
 %% ~put references to the literature/web site here ~
 https://txomeai.oceangenomics.com/
 }
-\author{
-%%  ~~who you are~~
-Joshua P. Katz
-}
-\note{
-%%  ~~further notes~~
-note
-}
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-seealso
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-report = txomeai_connect("https://txomeai.oceangenomics.com/api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html", dir = ".")
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
 report_ls = txomeai_ls(report)
 head(report_ls)
 }

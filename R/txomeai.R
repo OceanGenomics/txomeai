@@ -119,13 +119,14 @@ process_data_json = function(txomeai, input, table)
     if(sub$data_type[1] == "table")
     {
         header = unlist(sub$data$header)
+        types = unlist(sub$data$types)
         if(length(sub$data$rows) == 0)
         {
-            sub$datatable = data.table(matrix(ncol=length(header), nrow=0))
+            sub$data = data.table(matrix(ncol=length(header), nrow=0))
         }
         else
         {
-            sub$datatable = data.table(matrix(sub$data$rows,ncol=length(header), nrow=length(sub$data$rows[,1])))
+            sub$data = data.table(matrix(sub$data$rows,ncol=length(header), nrow=length(sub$data$rows[,1])))
         }
         numeric_cols = c()
         for(i in 1:length(header))
@@ -134,15 +135,15 @@ process_data_json = function(txomeai, input, table)
             {
                 header[i] = paste0("V", i)
             }
-            if(sub$data$types[i] == "numeric")
+            if(types[i] == "numeric")
             {
                 numeric_cols = c(numeric_cols, header[i])
             }
         }
-        colnames(sub$datatable) = header
+        colnames(sub$data) = header
         if(length(numeric_cols) > 0)
         {
-            sub$datatable[, (numeric_cols) := lapply(.SD, as.numeric), .SDcols = numeric_cols]
+            sub$data[, (numeric_cols) := lapply(.SD, as.numeric), .SDcols = numeric_cols]
         }
         return(sub)
     }
@@ -587,23 +588,23 @@ txomeai_get_all = function(txomeai, tableName)
         raw = txomeai_get(txomeai, sub[i,])
         if(raw$data_type == "table")
         {
-            old_head = colnames(raw$datatable)
-            raw$datatable = cbind(raw$datatable, sub[i,"key"])
-            colnames(raw$datatable) = c(old_head, "key")
+            old_head = colnames(raw$data)
+            raw$data = cbind(raw$data, sub[i,"key"])
+            colnames(raw$data) = c(old_head, "key")
             if(is.null(to_return))
             {
-                to_return = raw$datatable
+                to_return = raw$data
                 header = colnames(to_return)
                 types = sapply(to_return, class)
             }
             else
             {
-                t = sapply(raw$datatable, class)
+                t = sapply(raw$data, class)
                 if(!all(t == "character"))
                 {
                     types = t
                 }
-                to_return = rbind(to_return, raw$datatable)
+                to_return = rbind(to_return, raw$data)
             }
         }
         else

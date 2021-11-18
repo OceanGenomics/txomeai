@@ -5,58 +5,26 @@
 %%  ~~function to do ... ~~
 Get a single row query from txomeai_ls.
 }
-\description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
-Returns the data from a single txomeai_ls row.
-}
+\description{Returns the data from a single txomeai_ls row.}
 \usage{
 txomeai_get(txomeai, ls_row)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{txomeai}{
-%%     ~~Describe \code{txomeai} here~~
-The connection object returned from txomeai_connect.
-}
-  \item{ls_row}{
-%%     ~~Describe \code{ls_row} here~~
-A single row from the table returned by txomeai_ls.
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-details
+  \item{txomeai}{The connection object returned from txomeai_connect.}
+  \item{ls_row}{A single row from the table returned by txomeai_ls.}
 }
 \value{
-  Returns the raw data for the provided query.
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-references
-}
-\author{
-%%  ~~who you are~~
-Joshua P. Katz
-}
-\note{
-%%  ~~further notes~~
-note
-}
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-seealso
+  Returns a list with the query data.
+  \item{sample_name}{The input sample filename.}
+  \item{table_name}{The 'name' from the txomeai_ls table. }
+  \item{sample_id}{The automatically assigned sample id string. }
+  \item{data_type}{A string with values "json", "text", or "table"}
+  \item{data}{The desired data.}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-report = txomeai_connect("https://txomeai.oceangenomics.com/api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html", dir = ".")
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
 report_ls = txomeai_ls(report)
 report_samples = txomeai_get(report, report_ls[report_ls$name == "sampleName",])
 }

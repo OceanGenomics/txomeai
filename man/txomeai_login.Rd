@@ -12,49 +12,20 @@ This function is only needed if your cookie with oceangenomics.com has expired a
 \usage{
 txomeai_login(txomeai)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{txomeai}{
-%%     ~~Describe \code{txomeai} here~~
-The connection object that cookie has expired. 
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-details
+  \item{txomeai}{The connection object that cookie has expired. }
 }
 \value{
   If TRUE then the session is logged in, FALSE otherwise.
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 }
 \references{
 %% ~put references to the literature/web site here ~
 https://txomeai.oceangenomics.com/
 }
-\author{
-%%  ~~who you are~~
-Joshua P. Katz
-}
-\note{
-%%  ~~further notes~~
-note
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-seealso
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-report = txomeai_connect("https://txomeai.oceangenomics.com/api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html", dir = ".")
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
 txomeai_login(report)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
