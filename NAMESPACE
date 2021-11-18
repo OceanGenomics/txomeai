@@ -1,8 +1,9 @@
 export("txomeai_connect", "txomeai_get",
        "txomeai_get_all", "txomeai_login", "txomeai_ls",
-       "txomeai_update_glossary")
+       "txomeai_update_glossary", "txomeai_display")
 import(data.table)
 import(httr)
+import(magick)
 importFrom(urltools, url_parse, url_compose)
 importFrom(jsonlite, fromJSON)
 importFrom(getPass, getPass)

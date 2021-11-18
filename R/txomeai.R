@@ -3,6 +3,7 @@
 #library(jsonlite)
 #library(getPass)
 #library(data.table)
+#library(magick)
 
 # API Interface Functions
 
@@ -41,6 +42,18 @@ download_file = function(txomeai, filename, key="", overwrite=FALSE)
         resp = list(status_code=200, path=outfile)
     }
     return(resp)
+}
+
+#' Download a SVG file
+#'
+#' @param txomeai the connection object
+#' @param filename the filename of the file to download.
+#' @return a list with $status_code and $path to downloaded file.
+download_asset = function(txomeai, filename)
+{
+    asset = txomeai
+    asset$url$path = sub("json", "assets", asset$url$path, fixed=T)
+    return(download_file(asset, filename))
 }
 
 #' Determine if currently logged into txomeai
@@ -635,4 +648,66 @@ txomeai_get_all = function(txomeai, tableName)
         names(to_return) = sub$key
     }
     return(to_return)
+}
+
+
+#' Use to display a svg file
+#' @param txomeai the report connection object
+#' @param ls_row the row from the ls table to display
+#' @return path to the downloaded svg file if download successful, NULL otherwsie
+txomeai_display = function(txomeai, ls_row)
+{
+    if(!all(colnames(txomeai$ls) %in% colnames(ls_row)))
+    {
+        print("Input row did not have the expected format")
+        return()
+    }
+    r = download_asset(txomeai, ls_row$name)
+    if(r$status_code != 200)
+    {
+        cat("Failed to download svg file with HTML code: ", r$status_code, "\n")
+        return()
+    }
+    img = image_read(r$path)
+    displayed = tryCatch(
+        {
+            image_display(img)
+            TRUE
+        },
+        error=function(cond)
+        {
+            message("Error on image_display: ")
+            message(cond, "\n")
+            return(FALSE)
+        },
+        warning=function(cond)
+        {
+            message("Warnings on image_display: ")
+            message(cond, "\n")
+            return(TRUE)
+        }
+    )
+    if(displayed)
+    {
+        return(r$path)
+    }
+    displayed = tryCatch(
+        {
+            image_browse(img)
+            TRUE
+        },
+        error=function(cond)
+        {
+            message("Error on image_browse: ")
+            message(cond, "\n")
+            return(FALSE)
+        },
+        warning=function(cond)
+        {
+            message("Warnings on image_browse: ")
+            message(cond, "\n")
+            return(TRUE)
+        }
+    )
+    return(r$path)
 }
