@@ -501,12 +501,11 @@ txomeai_ls = function(txomeai)
         {
             for(i in 1:length(m$tableName))
             {
-                if(m$stepName[i] == "all")
-                {
+                if(m$stepName[i] == "all") {
                     tables = rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
-                }
-                else
-                {
+                } else if (m$stepName[i] == "assets") {
+                    tables = rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
+                } else {
                     tables = rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
                 }
             }
@@ -514,7 +513,7 @@ txomeai_ls = function(txomeai)
     }
     tables = unique(tables)
     colnames(tables) = table_header
-    row.names(tables) = 1:length(tables$key)
+    tables$row = 1:length(tables$key)
     return(unique(tables))
 }
 
