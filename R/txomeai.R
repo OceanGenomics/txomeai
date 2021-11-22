@@ -272,7 +272,44 @@ local_connect = function(url, dir=".")
         message("Query failed: ", response$status_code, "\n")
         return()
     }
-    return(txomeai_update_glossary(txomeai))
+    return(update_glossary(txomeai))
+}
+
+#' Use to build our file index for a report
+#'
+#' @param txomeai The report connection object
+#' @return the connection object with the built index
+update_glossary = function(txomeai)
+{
+    txomeai$meta = vector("list", length(txomeai$data$app))
+    txomeai$sample = vector("list", length(txomeai$data$app))
+    for(i in 1:length(txomeai$data$app))
+    {
+        app = txomeai$data[i, "app"]
+        r = download_file(txomeai, paste(app, "meta.csv", sep="."))
+        if(r$status_code == 200 & file.info(r$path)$size > 0)
+        {
+            txomeai$meta[[i]] = read.csv(r$path, header=T)
+        }
+        else 
+        {
+            txomeai$meta[[i]] = data.table()
+        }
+
+        r = download_file(txomeai, paste(app, "sample.csv", sep="."))
+        if(r$status_code == 200 & file.info(r$path)$size > 0)
+        {
+            txomeai$sample[[i]] = read.csv(r$path, header=T)
+        }
+        else 
+        {
+            txomeai$sample[[i]] = data.table()
+        }
+    }
+    names(txomeai$meta) = txomeai$data$app
+    names(txomeai$sample) = txomeai$data$app
+    txomeai$ls = txomeai_ls(txomeai)
+    return(txomeai)
 }
 
 test_txomeai = function(url, dir=".", output="Results.Rhistory")
@@ -456,7 +493,7 @@ txomeai_connect = function(url, dir=".")
         message("Query failed: ", response$status_code, "\n")
         return()
     }
-    return(txomeai_update_glossary(txomeai))
+    return(update_glossary(txomeai))
 }
 
 #' Use to create a list of the available tables
@@ -515,43 +552,6 @@ txomeai_ls = function(txomeai)
     colnames(tables) = table_header
     tables$row = 1:length(tables$key)
     return(unique(tables))
-}
-
-#' Use to build our file index for a report
-#'
-#' @param txomeai The report connection object
-#' @return the connection object with the built index
-txomeai_update_glossary = function(txomeai)
-{
-    txomeai$meta = vector("list", length(txomeai$data$app))
-    txomeai$sample = vector("list", length(txomeai$data$app))
-    for(i in 1:length(txomeai$data$app))
-    {
-        app = txomeai$data[i, "app"]
-        r = download_file(txomeai, paste(app, "meta.csv", sep="."))
-        if(r$status_code == 200 & file.info(r$path)$size > 0)
-        {
-            txomeai$meta[[i]] = read.csv(r$path, header=T)
-        }
-        else 
-        {
-            txomeai$meta[[i]] = data.table()
-        }
-
-        r = download_file(txomeai, paste(app, "sample.csv", sep="."))
-        if(r$status_code == 200 & file.info(r$path)$size > 0)
-        {
-            txomeai$sample[[i]] = read.csv(r$path, header=T)
-        }
-        else 
-        {
-            txomeai$sample[[i]] = data.table()
-        }
-    }
-    names(txomeai$meta) = txomeai$data$app
-    names(txomeai$sample) = txomeai$data$app
-    txomeai$ls = txomeai_ls(txomeai)
-    return(txomeai)
 }
 
 #' Used to collect the raw message data parsed into R list
