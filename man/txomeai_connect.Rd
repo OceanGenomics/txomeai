@@ -10,19 +10,11 @@ Build a connection object to an analysis report
 Builds the connection object to a report used for all queries.
 }
 \usage{
-txomeai_connect(url, dir = ".")
+txomeai_connect(url)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{url}{
-%%     ~~Describe \code{url} here~~
-A string with the url of the report to connect to.
-}
-  \item{dir}{
-%%     ~~Describe \code{dir} here~~
-The local directory path to save cached data to.
-Change or delete this directory if you want your API queries to re-run, this should only be required very rarely. 
-}
+  \item{url}{A string with the url of the report to connect to.}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~

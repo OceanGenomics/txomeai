@@ -120,75 +120,6 @@ init_dir = function(dir, cas, inst)
     return(inst_dir)
 }
 
-#' Handle the downloaded json.gz file
-#'
-#' @param txomeai the txomeai object to handle memory caching
-#' @param input the *.json.gz filepath
-#' @param table the table name to extract
-#' @return a list containing metadata, raw data, and processes data
-process_data_json = function(txomeai, input, table)
-{
-    sub = jsonlite::fromJSON(input)
-    if(sub$data_type[1] == "table")
-    {
-        header = unlist(sub$data$header)
-        types = unlist(sub$data$types)
-        if(length(sub$data$rows) == 0)
-        {
-            sub$data = data.table(matrix(ncol=length(header), nrow=0))
-        }
-        else
-        {
-            sub$data = data.table(matrix(sub$data$rows,ncol=length(header), nrow=length(sub$data$rows[,1])))
-        }
-        numeric_cols = c()
-        for(i in 1:length(header))
-        {
-            if(header[i] == "")
-            {
-                header[i] = paste0("V", i)
-            }
-            if(types[i] == "numeric")
-            {
-                numeric_cols = c(numeric_cols, header[i])
-            }
-        }
-        colnames(sub$data) = header
-        if(length(numeric_cols) > 0)
-        {
-            sub$data[, (numeric_cols) := lapply(.SD, as.numeric), .SDcols = numeric_cols]
-        }
-        return(sub)
-    }
-    return(sub)
-}
-
-#' Download and return a raw data object
-#'
-#' @param txomeai the connection object
-#' @param ls_row the row from txomeai$ls to download
-#' @return the raw list parsed from the json data
-fetch = function(txomeai, ls_row)
-{
-    if(is.na(ls_row$key))
-    {
-        return(get_sample_meta(txomeai, ls_row$name))
-    }
-    file = paste(ls_row$name, "json.gz", sep=".")
-    r = download_file(txomeai, file, ls_row$key)
-    if(r$status_code == 200)
-    {
-        message("Downloaded successfully: ", file)
-        return(process_data_json(txomeai, r$path, table))
-    }
-    else
-    {
-        message("Failed to download: ", r$status_code)
-        return(NULL)
-    }
-    return(r)
-}
-
 #' Use to return sample table raw results
 #'
 #' @param txomeai the connected report object
@@ -196,15 +127,15 @@ fetch = function(txomeai, ls_row)
 #' @return NULL or a data.table with sample meta data
 get_sample_meta = function(txomeai, table)
 {
-    for(i in 1:length(txomeai$sample))
+    col_index = vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
+    if(all(!col_index))
     {
-        if(table %in% colnames(txomeai$sample[[i]]))
-        {
-            df = txomeai$sample[[i]][,c("sample", table)]
-            return(df)
-        }
+        return(NULL)
     }
-    return(NULL)
+    else 
+    {
+        return(txomeai$sample[col_index][[1]][,c("sample", table)])
+    }
 }
 
 #' Use to get the CAS and Instance ID from url
@@ -214,16 +145,15 @@ get_sample_meta = function(txomeai, table)
 get_cas_and_instance = function(url_path) 
 {
     to_return = list(cas=NULL, instance=NULL)
-    for(p in url_path)
+    cas_i = grep("\\w+-\\w+-\\w+-\\w+-\\w+", url_path, perl=TRUE)
+    inst_i = grep("\\d+-\\d+-\\d+T\\d+", url_path, perl=TRUE)
+    if(cas_i > 0)
     {
-        if(grepl("\\w+-\\w+-\\w+-\\w+-\\w+", p, perl=TRUE))
-        {
-            to_return$cas = p
-        }
-        if(grepl("\\d+-\\d+-\\d+T\\d+", p, perl=TRUE))
-        {
-            to_return$instance = p
-        }
+        to_return$cas = url_path[cas_i]
+    } 
+    if(inst_i > 0)
+    {
+        to_return$instance = url_path[inst_i]
     }
     return(to_return)
 }
@@ -312,12 +242,12 @@ update_glossary = function(txomeai)
     return(txomeai)
 }
 
-test_txomeai = function(url, dir=".", output="Results.Rhistory")
+test_txomeai = function(url, output="Results.Rhistory")
 {
     outfile = paste(dir, output, sep="/")
     conn = file(outfile)
     report = tryCatch(
-        txomeai_connect(url, dir=dir),
+        txomeai_connect(url),
         error=function(cond)
         {
             message("Failed on txomeai_connect: ")
@@ -374,12 +304,12 @@ test_txomeai = function(url, dir=".", output="Results.Rhistory")
         all_passed = all_passed & tryCatch(
             {
                 message(paste("Start testing table: ", tables[i,], "\n"))
-                f = txomeai_get(report, tables[i,])
+                f = txomeai_get(tables[i,], report)
                 TRUE
             },
             error=function(cond)
             {
-                message(paste("txomeai_getn failed on: ", tables[i,], "\n"))
+                message(paste("txomeai_get failed on: ", tables[i,], "\n"))
                 message("Error:")
                 message(cond, "\n")
                 return(FALSE)
@@ -427,9 +357,8 @@ txomeai_login = function(txomeai)
 #' Contruct the connection list object and download or read the glossary
 #'
 #' @param url The report URL to connect to
-#' @param dir (OPTIONAL) The directory to save data to.
 #' @return The constructed connection object
-txomeai_connect = function(url, dir=".") 
+txomeai_connect = function(url) 
 {
     txomeai = list()
     # Validate and construct URL
@@ -458,7 +387,7 @@ txomeai_connect = function(url, dir=".")
     workingInstance = meta$instance
     txomeai$CAS = workingCAS
     txomeai$instance = workingInstance
-    txomeai$dir = init_dir(dir, workingCAS, workingInstance)
+    txomeai$dir = init_dir(BiocFileCache::bfccache(), workingCAS, workingInstance)
     # Test that the dir has been setup appropriately
     if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
     {
@@ -559,17 +488,26 @@ txomeai_ls = function(txomeai)
 #' @param txomeai The report connection object
 #' @param ls_row A row from the txomeai_ls datatable
 #' @return a list containing the raws data
-txomeai_get = function(txomeai, ls_row)
+txomeai_get = function(name, key, txomeai)
 {
-    if(!is.data.table(ls_row))
+    if(is.na(key))
     {
-        message("Error: Unexpected subset data")
+        return(get_sample_meta(txomeai, name))
     }
-    if(!all(c("key", "name", "description") %in% colnames(ls_row)))
+    file = paste(name, "json.gz", sep=".")
+    r = download_file(txomeai, file, key)
+    if(r$status_code == 200)
     {
-        message("Error: Expected columns not found in subset data")
+        sub = jsonlite::fromJSON(r$path)
+        message("Downloaded successfully: ", file)
+        return(sub)
     }
-    return(fetch(txomeai, ls_row))
+    else
+    {
+        message("Failed to download: ", r$status_code)
+        return(NULL)
+    }
+    return(r)
 }
 
 #' Used for building a single result from multiple queries
@@ -582,71 +520,45 @@ txomeai_get_all = function(txomeai, tableName)
     to_return = NULL
     header = NULL
     types = NULL
-    #sub = subset(txomeai$ls, name == tableName)
-    # name must be initilized to pass R CMD check 
+    # name and row_count must be initilized to pass R CMD check 
+    row_count = NULL
     name = NULL
+    if(!(tableName %in% txomeai$ls$name))
+    {
+        message(sprintf("Error: table name '%s' not found.", tableName))
+        return(NULL)
+    }
     sub = txomeai$ls[name == tableName, ]
-    if(length(sub$key) == 0)
+    if(nrow(sub) == 1)
     {
-        message(sprintf("Error: no tables found with name %s\n", name))
-        return()
+        message(sprintf("Single txomeai_get"))
+        return(txomeai_get(sub[1,"name"], sub[1,"key"], txomeai))
     }
-    if(length(sub$key) == 1)
+    # Get raw list results for each row and add to data.table as column 'get'
+    sub$get = apply(sub, FUN=function(x,r){return(txomeai::txomeai_get(x["name"], x["key"], r));}, MARGIN=1, txomeai)
+    # Filter all empty get results
+    get_row_count = function(x){ return(nrow(x[[1]]$data$rows));}
+    sub[,row_count := get_row_count(get), by=key]
+    if(nrow(sub[row_count > 0,]) == 0)
     {
-        return(txomeai_get(txomeai, sub))
+        to_return = data.table(matrix(ncol=length(sub$get[[1]]$data$header), nrow=0))
+        colnames(to_return) = sub$get[[1]]$data$header
+        return(to_return)
     }
-    for(i in 1:length(sub$key))
-    {
-        raw = txomeai_get(txomeai, sub[i,])
-        if(raw$data_type == "table")
-        {
-            old_head = colnames(raw$data)
-            raw$data = cbind(raw$data, sub[i,"key"])
-            colnames(raw$data) = c(old_head, "key")
-            if(is.null(to_return))
-            {
-                to_return = raw$data
-                header = colnames(to_return)
-                types = sapply(to_return, class)
-            }
-            else
-            {
-                t = sapply(raw$data, class)
-                if(!all(t == "character"))
-                {
-                    types = t
-                }
-                to_return = rbind(to_return, raw$data)
-            }
-        }
-        else
-        {
-            if(is.null(to_return))
-            {
-                to_return = list()
-                to_return[[i]] = raw$data
-            }
-            else
-            {
-                to_return[[i]] = raw$data
-            }
-        }
+    sub = sub[row_count > 0,]
 
-    }
-    if(is.data.table(to_return))
-    {
-        colnames(to_return) = header
-        if(!all(types == "character"))
-        {
-            num_cols = header[types != "character"]
-            to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
-        }
-    }
-    else
-    {
-        names(to_return) = sub$key
-    }
-    return(to_return)
+    # Build the output data.table from the raw data rows
+    to_return = data.table(do.call("rbind", lapply(sub$get, FUN=function(x){return(x$data$rows);})))
+    # Build the key column for the output table
+    id_col = rep(sub$key, sub$row_count)
+    # Set column types
+    num_cols = colnames(to_return)[sub$get[[1]]$data$types == "numeric"]
+    to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
+    # Set column names
+    colnames(to_return) = sub$get[[1]]$data$header
+    # Add id column
+    to_return$sample_id = id_col
+    return(to_return) 
 }
 
 
