@@ -223,7 +223,7 @@ update_glossary = function(txomeai)
         }
         else 
         {
-            txomeai$meta[[i]] = data.table()
+            txomeai$meta[[i]] = data.frame()
         }
 
         r = download_file(txomeai, paste(app, "sample.csv", sep="."))
@@ -233,7 +233,7 @@ update_glossary = function(txomeai)
         }
         else 
         {
-            txomeai$sample[[i]] = data.table()
+            txomeai$sample[[i]] = data.frame()
         }
     }
     names(txomeai$meta) = txomeai$data$app
