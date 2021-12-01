@@ -536,7 +536,12 @@ txomeai_get_all = function(txomeai, tableName)
     }
     # Get raw list results for each row and add to data.table as column 'get'
     sub$get = apply(sub, FUN=function(x,r){return(txomeai::txomeai_get(x["name"], x["key"], r));}, MARGIN=1, txomeai)
-    # Filter all empty get results
+    # Return results if data_type isn't table
+    if(sub$get[[1]]$data_type != "table")
+    {
+        return(sub)
+    }
+    # Filter all empty table get results
     get_row_count = function(x){ return(nrow(x[[1]]$data$rows));}
     sub[,row_count := get_row_count(get), by=key]
     if(nrow(sub[row_count > 0,]) == 0)
