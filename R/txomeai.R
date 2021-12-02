@@ -106,24 +106,6 @@ test_auth = function(txomeai)
     return(FALSE)
 }
 
-#' Determines if a sample column is meta data or external data
-#'
-#' @param txomeai the connection object
-#' @param sample_col the vector of the sample.csv column values
-#' @return True if the values are external data, false if they are meta data
-is_sample_meta_data = function(txomeai, sample_col)
-{
-    if(length(sample_col) == 0)
-    {
-        return(FALSE)
-    }
-    if(length(grep(txomeai$CAS, as.character(sample_col[1]), fixed=TRUE)) > 0)
-    {
-        return(FALSE)
-    }
-    return(TRUE)
-}
-
 #' Initilize the dir directory in a cross-platform manner
 #'
 #' @param dir the provided dir path
@@ -271,8 +253,14 @@ update_glossary = function(txomeai)
     return(txomeai)
 }
 
+#' Uses to test the API
+#'
+#' @param url The url to connect to
+#' @param output The file to write results to
+#' @return the connection object with the built index
 test_txomeai = function(url, output="Results.Rhistory")
 {
+    key = NULL
     outfile = paste(dir, output, sep="/")
     conn = file(outfile)
     report = tryCatch(
@@ -316,6 +304,8 @@ test_txomeai = function(url, output="Results.Rhistory")
             return(NULL)
         }
     )
+    # Remove svg assets from test
+    tables = tables[key != "assets",]
     if(is.null(tables) | length(tables) == 0)
     {
         if(length(tables) == 0)
