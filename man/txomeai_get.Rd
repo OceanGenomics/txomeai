@@ -11,8 +11,8 @@ txomeai_get(txomeai, tableName, tableKey)
 }
 \arguments{
   \item{txomeai}{The connection object returned from txomeai_connect.}
-  \item{tableName}{A name column from the table returned by txomeai_ls.}
-  \item{tableKey}{A single row from the table returned by txomeai_ls.}
+  \item{tableName}{A name column value from the ls table.}
+  \item{tableKey}{An optional key value from the ls table.}
 }
 \value{
   Returns a data.table with the requested results.
