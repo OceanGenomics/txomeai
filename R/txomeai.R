@@ -213,7 +213,7 @@ update_glossary = function(txomeai)
 {
     txomeai$meta = vector("list", length(txomeai$data$app))
     txomeai$sample = vector("list", length(txomeai$data$app))
-    for(i in 1:length(txomeai$data$app))
+    for(i in seq_len(length(txomeai$data$app)))
     {
         app = txomeai$data[i, "app"]
         r = download_file(txomeai, paste(app, "meta.csv", sep="."))
@@ -299,7 +299,7 @@ test_txomeai = function(url, output="Results.Rhistory")
         return(FALSE)
     }
     all_passed = TRUE
-    for(i in 1:length(tables$key))
+    for(i in seq_len(length(tables$key)))
     {
         all_passed = all_passed & tryCatch(
             {
@@ -445,7 +445,7 @@ txomeai_ls = function(txomeai)
         }
         for(c in colnames(s))
         {
-            for(i in 1:length(s[,1]))
+            for(i in seq_len(length(s[,1])))
             {
                 # Testing if the CAS is in the path works for web analysis
                 # Testing if the value path starts with sample works for local analysis
@@ -465,7 +465,7 @@ txomeai_ls = function(txomeai)
     {
         if(length(m$tableName) > 0)
         {
-            for(i in 1:length(m$tableName))
+            for(i in seq_len(length(m$tableName)))
             {
                 if(m$stepName[i] == "all") {
                     tables = rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
@@ -479,7 +479,7 @@ txomeai_ls = function(txomeai)
     }
     tables = unique(tables)
     colnames(tables) = table_header
-    tables$row = 1:length(tables$key)
+    tables$row = seq_len(length(tables$key))
     return(unique(tables))
 }
 
