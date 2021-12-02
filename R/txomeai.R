@@ -56,6 +56,35 @@ download_asset = function(txomeai, filename)
     return(download_file(asset, filename))
 }
 
+#' Used to collect the raw message data parsed into R list
+#'
+#' @param name The name column value from the ls table
+#' @param key The key column value from the ls table
+#' @param txomeai The report connection object
+#' @param ls_row A row from the txomeai_ls datatable
+#' @return a list containing the raws data
+fetch = function(name, key, txomeai)
+{
+    if(is.na(key))
+    {
+        return(get_sample_meta(txomeai, name))
+    }
+    file = paste(name, "json.gz", sep=".")
+    r = download_file(txomeai, file, key)
+    if(r$status_code == 200)
+    {
+        sub = jsonlite::fromJSON(r$path)
+        message("Downloaded successfully: ", file)
+        return(sub)
+    }
+    else
+    {
+        message("Failed to download: ", r$status_code)
+        return(NULL)
+    }
+    return(r)
+}
+
 #' Determine if currently logged into txomeai
 #'
 #' @param txomeai the connection object
@@ -483,39 +512,13 @@ txomeai_ls = function(txomeai)
     return(unique(tables))
 }
 
-#' Used to collect the raw message data parsed into R list
-#'
-#' @param txomeai The report connection object
-#' @param ls_row A row from the txomeai_ls datatable
-#' @return a list containing the raws data
-txomeai_get = function(name, key, txomeai)
-{
-    if(is.na(key))
-    {
-        return(get_sample_meta(txomeai, name))
-    }
-    file = paste(name, "json.gz", sep=".")
-    r = download_file(txomeai, file, key)
-    if(r$status_code == 200)
-    {
-        sub = jsonlite::fromJSON(r$path)
-        message("Downloaded successfully: ", file)
-        return(sub)
-    }
-    else
-    {
-        message("Failed to download: ", r$status_code)
-        return(NULL)
-    }
-    return(r)
-}
-
-#' Used for building a single result from multiple queries
+#' Used for collecting any data from the report
 #'
 #' @param txomeai the report connection object
 #' @param tableName the name from the ls table
+#' @param tableKey optionally provide the key value for a specific request
 #' @return a data.table with all results
-txomeai_get_all = function(txomeai, tableName)
+txomeai_get = function(txomeai, tableName, tableKey=NULL)
 {
     to_return = NULL
     header = NULL
@@ -523,19 +526,44 @@ txomeai_get_all = function(txomeai, tableName)
     # name and row_count must be initilized to pass R CMD check 
     row_count = NULL
     name = NULL
+    sub = NULL
+    key = NULL
+    # Error checking
     if(!(tableName %in% txomeai$ls$name))
     {
         message(sprintf("Error: table name '%s' not found.", tableName))
         return(NULL)
     }
-    sub = txomeai$ls[name == tableName, ]
-    if(nrow(sub) == 1)
+    if(!is.null(tableKey) && !(tableKey %in% txomeai$ls$key))
     {
-        message(sprintf("Single txomeai_get"))
-        return(txomeai_get(sub[1,"name"], sub[1,"key"], txomeai))
+        message(sprintf("Error: table key '%s' not found.", tableKey))
+        return(NULL)
     }
+
+    if(is.null(tableKey))
+    {
+        sub = txomeai$ls[name == tableName, ]
+    } else if (is.na(tableKey)) {
+        sub = txomeai$ls[name == tableName & is.na(key), ]
+    } else {
+        sub = txomeai$ls[name == tableName & key == tableKey,]
+    }
+
+    if(nrow(sub) == 0) {
+        message("Failed to find requested data.")
+        return(NULL)
+    }
+    
+    # Handle meta data and assets
+    if(nrow(sub) == 1 && is.na(sub$key[[1]]))
+    {
+        return(data.table(fetch(sub$name[[1]], sub$key[[1]], txomeai)))
+    } else if (nrow(sub) == 1 && sub$key[[1]] == "assets"){
+        return(txomeai_display(txomeai, sub[1,]))
+    }
+    
     # Get raw list results for each row and add to data.table as column 'get'
-    sub$get = apply(sub, FUN=function(x,r){return(txomeai::txomeai_get(x["name"], x["key"], r));}, MARGIN=1, txomeai)
+    sub$get = apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, txomeai)
     # Return results if data_type isn't table
     if(sub$get[[1]]$data_type != "table")
     {
@@ -568,6 +596,7 @@ txomeai_get_all = function(txomeai, tableName)
 
 
 #' Use to display a svg file
+#'
 #' @param txomeai the report connection object
 #' @param ls_row the row from the ls table to display
 #' @return path to the downloaded svg file if download successful, NULL otherwsie
