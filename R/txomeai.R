@@ -573,14 +573,14 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
     # Build the output data.table from the raw data rows
     to_return = data.table(do.call("rbind", lapply(sub$get, FUN=function(x){return(x$data$rows);})))
     # Build the key column for the output table
-    id_col = rep(sub$key, sub$row_count)
+    key_col = rep(sub$key, sub$row_count)
     # Set column types
     num_cols = colnames(to_return)[sub$get[[1]]$data$types == "numeric"]
     to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
     # Set column names
     colnames(to_return) = sub$get[[1]]$data$header
     # Add id column
-    to_return$sample_id = id_col
+    to_return$key = key_col
     return(to_return) 
 }
 
