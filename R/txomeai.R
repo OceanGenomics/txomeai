@@ -52,7 +52,7 @@ download_file = function(txomeai, filename, key="", overwrite=FALSE)
 download_asset = function(txomeai, filename)
 {
     asset = txomeai
-    asset$url$path = sub("json", "assets", asset$url$path, fixed=T)
+    asset$url$path = sub("json", "assets", asset$url$path, fixed=TRUE)
     return(download_file(asset, filename))
 }
 
@@ -201,7 +201,7 @@ local_connect = function(url, dir=".")
 
     if(response$status_code == 200)
     {
-        txomeai$data = read.csv(response$path, header=T)
+        txomeai$data = read.csv(response$path, header=TRUE)
     }
     else if (response$status_code == 404) 
     {
@@ -230,7 +230,7 @@ update_glossary = function(txomeai)
         r = download_file(txomeai, paste(app, "meta.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$meta[[i]] = read.csv(r$path, header=T)
+            txomeai$meta[[i]] = read.csv(r$path, header=TRUE)
         }
         else 
         {
@@ -240,7 +240,7 @@ update_glossary = function(txomeai)
         r = download_file(txomeai, paste(app, "sample.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$sample[[i]] = read.csv(r$path, header=T)
+            txomeai$sample[[i]] = read.csv(r$path, header=TRUE)
         }
         else 
         {
@@ -429,7 +429,7 @@ txomeai_connect = function(url)
 
     if(response$status_code == 200)
     {
-        txomeai$data = read.csv(response$path, header=T)
+        txomeai$data = read.csv(response$path, header=TRUE)
     }
     else if (response$status_code == 404) 
     {
