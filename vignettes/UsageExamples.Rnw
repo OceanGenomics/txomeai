@@ -1,0 +1,89 @@
+\documentclass[a4paper]{article}
+\title{ txome.ai R API Examples }
+\author{ Joshua P. Katz }
+\begin{document}
+\maketitle
+
+To run any of the following examples just assign \textbf{url} to any report
+URL you have access to.
+
+\section{ Contamination Summary Figure }
+
+The "ContaminationSummary" table consists of sample ids, 
+result types, and ratio of results. So all we need to do is create a matrix 
+of the ratios with result types as rows and sample ids as columns.
+
+<<eval=FALSE>>=
+report = txomeai::txomeai_connect(url)
+contam = txomeai::txomeai_get(report, "ContaminationSummary")
+sample_count = length(unique(contam$key))
+result_type = length(unique(contam$type))
+contam_matrix = matrix(contam$ratio, nrow=result_type, ncol=sample_count, 
+    dimnames=list(unique(contam$type), unique(contam$key)))
+barplot(contam_matrix)
+@
+
+\section{ Transcript Integrity Figure }
+
+The "TranscriptIntegrityStats" table contains sample meta data and the raw
+Transcript Integrity list in the \textbf{get} column. The raw stats table
+is \textbf{transcript\_stats} and it can be directly referenced to build
+the expected histogram.
+
+<<eval=FALSE>>=
+report = txomeai::txomeai_connect(url)
+tis = txomeai::txomeai_get(report, "TranscriptIntegrityStats")
+hist(tis$get[[1]]$data$raw$transcript_stats$tin, main=tis$description[[1]], breaks=100)
+@
+
+\section{ Spearman Correlation Heatmap }
+
+The "SpearmanCorrelation" table contains the correlation matrix between all samples 
+with some additional meta data. We can directly reference the correlation values
+and provide one meta data column to build the desired heatmap.
+
+<<eval=FALSE>>=
+report = txomeai::txomeai_connect(url)
+spearman = txomeai::txomeai_get(report, "SpearmanCorrelation")
+heatmap(as.matrix(spearman[,2:(length(colnames(spearman))-1)]), 
+    labRow=spearman$sample, main="Spearman Correlation")
+@
+
+\section{ High Varaince Genes Figure }
+
+The "HighVarianceGenes" table contains the step meta data and the raw
+TPM expression values for every sample in the \textbf{get} column.
+Below we process the results into a data.frame, calculate some auxillary
+measurements, and plot at most ten genes from the results.
+
+
+<<eval=FALSE>>=
+report = txomeai::txomeai_connect(url)
+hvg = txomeai::txomeai_get(report, "HighVarianceGenes")
+expression_mean = unlist(lapply(hvg$get[[1]]$data$raw$sample_expression, 
+    FUN=function(x){return(mean(x$expression));}))
+expression_df = rbindlist(hvg$get[[1]]$data$raw$sample_expression)
+sample_count = length(hvg$get[[1]]$data$raw$sample_expression[[1]]$sample)
+gene_names = hvg$get[[1]]$data$raw$gene
+expression_df$gene = unlist(lapply(gene_names, FUN=rep, sample_count))
+expression_df$gene_index = unlist(lapply(1:length(gene_names), 
+    FUN=rep, sample_count))
+plot_count = min(10, length(expression_mean))
+plot_points = expression_df[expression_df$gene_index <= plot_count,]
+plot_points$sample = as.factor(plot_points$sample)
+min_exp = min(plot_points$expression)
+max_exp = max(plot_points$expression)
+x_max = max_exp + (0.2 * max_exp)
+par(mar=c(3,6,1,1))
+plot(expression_mean[1:plot_count], 1:plot_count, xlim=c(min_exp,x_max), 
+    type='l', axes=FALSE)
+points(plot_points$expression, plot_points$gene_index, col=plot_points$sample, 
+    type="p", pch=20)
+axis(1)
+par(las=2)
+axis(2, labels=gene_names[1:plot_count], at=1:plot_count)
+legend(max_exp, plot_count, levels(plot_points$sample), 
+    col=1:sample_count, pch=20)
+@
+
+\end{document}
