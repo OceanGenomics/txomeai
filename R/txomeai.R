@@ -1,355 +1,9 @@
-# API Interface Functions
-
-#' Download an API file
-#' 
-#' @param filename the filename of the file to download.
-#' @param key a string that uniquely identifies the correct file. 
-#' @return a list with $status_code and $path to downloaded file.
-download_file = function(txomeai, filename, key="", overwrite=FALSE)
-{
-    downloadURL = txomeai$url
-    downloadURL$path = paste(downloadURL$path, filename, sep="/")
-    key_dir = txomeai$dir
-    if(!is.na(key) && nchar(key) > 0)
-    {
-        key_dir = file.path(txomeai$dir, key)
-        downloadURL$path = paste(txomeai$url$path, key, filename, sep="/")
-    }
-    if(!dir.exists(key_dir))
-    {
-        dir.create(key_dir)
-    }
-    outfile = file.path(key_dir, filename)
-    resp = NULL
-    if(!file.exists(outfile) || overwrite)
-    {
-        r = httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
-        if(r$status_code != 200 && file.exists(outfile))
-        {
-            file.remove(outfile)
-        }
-        resp = list(status_code=r$status_code, path=outfile)
-    }
-    else
-    {
-        resp = list(status_code=200, path=outfile)
-    }
-    return(resp)
-}
-
-#' Download a SVG file
-#'
-#' @param txomeai the connection object
-#' @param filename the filename of the file to download.
-#' @return a list with $status_code and $path to downloaded file.
-download_asset = function(txomeai, filename)
-{
-    asset = txomeai
-    asset$url$path = sub("json", "assets", asset$url$path, fixed=TRUE)
-    return(download_file(asset, filename))
-}
-
-#' Used to collect the raw message data parsed into R list
-#'
-#' @param name The name column value from the ls table
-#' @param key The key column value from the ls table
-#' @param txomeai The report connection object
-#' @param ls_row A row from the txomeai_ls datatable
-#' @return a list containing the raws data
-fetch = function(name, key, txomeai)
-{
-    if(is.na(key))
-    {
-        return(get_sample_meta(txomeai, name))
-    }
-    file = paste(name, "json.gz", sep=".")
-    r = download_file(txomeai, file, key)
-    if(r$status_code == 200)
-    {
-        sub = jsonlite::fromJSON(r$path)
-        message("Downloaded successfully: ", file)
-        return(sub)
-    }
-    else
-    {
-        message("Failed to download: ", r$status_code)
-        return(NULL)
-    }
-    return(r)
-}
-
-#' Determine if currently logged into txomeai
-#'
-#' @param txomeai the connection object
-#' @return true if connected, false otherwise
-test_auth = function(txomeai)
-{
-    list_cas = txomeai$url
-    list_cas$path = "api/accounts/current"
-    resp = httr::GET(urltools::url_compose(list_cas))
-    if(resp$status_code == 200)
-    {
-        return(TRUE)
-    }
-    if(resp$status_code == 401 || resp$status_code == 404)
-    {
-        return(FALSE)
-    } 
-    message("Unexpected HTTP response: ", resp$status_code, "\n")
-    return(FALSE)
-}
-
-#' Initilize the dir directory in a cross-platform manner
-#'
-#' @param dir the provided dir path
-#' @param cas the connected cas
-#' @return the normalized dir path
-init_dir = function(dir, cas, inst)
-{
-    dir = gsub("/$|\\\\$", "", dir, perl=TRUE)
-    if(!dir.exists(dir))
-    {
-        dir.create(dir)
-    }
-    cas_dir = file.path(dir, cas)
-    if(!dir.exists(cas_dir))
-    {
-        dir.create(cas_dir)
-    }
-    inst_dir = file.path(cas_dir, inst)
-    if(!dir.exists(inst_dir))
-    {
-        dir.create(inst_dir)
-    }
-    return(inst_dir)
-}
-
-#' Use to return sample table raw results
-#'
-#' @param txomeai the connected report object
-#' @param table the name of the table to download.
-#' @return NULL or a data.table with sample meta data
-get_sample_meta = function(txomeai, table)
-{
-    col_index = vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
-    if(all(!col_index))
-    {
-        return(NULL)
-    }
-    else 
-    {
-        return(txomeai$sample[col_index][[1]][,c("sample", table)])
-    }
-}
-
-#' Use to get the CAS and Instance ID from url
-#'
-#' @param url_path A vector of the urls path elements
-#' @return A list containing "cas" and "instance"
-get_cas_and_instance = function(url_path) 
-{
-    to_return = list(cas=NULL, instance=NULL)
-    cas_i = grep("\\w+-\\w+-\\w+-\\w+-\\w+", url_path, perl=TRUE)
-    inst_i = grep("\\d+-\\d+-\\d+T\\d+", url_path, perl=TRUE)
-    if(cas_i > 0)
-    {
-        to_return$cas = url_path[cas_i]
-    } 
-    if(inst_i > 0)
-    {
-        to_return$instance = url_path[inst_i]
-    }
-    return(to_return)
-}
-
-#' Contruct the connection list object to the local test server
-#'
-#' @param url The report URL to connect to
-#' @param dir (OPTIONAL) The directory to save data to.
-#' @return The constructed connection object
-local_connect = function(url, dir=".") 
-{
-    txomeai = list()
-    # Validate and construct URL
-    txomeai$url = urltools::url_parse(url)
-    txomeai$CAS = ""
-    txomeai$instance = ""
-
-    parts = unlist(strsplit(txomeai$url$path, "/"))
-    workingCAS = parts[2]
-    workingInstance = parts[3]
-    txomeai$CAS = workingCAS
-    txomeai$instance = workingInstance
-    txomeai$dir = init_dir(dir, workingCAS, workingInstance)
-    # Test that the dir has been setup appropriately
-    if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
-    {
-        message("Insufficent access to working directory:", txomeai$dir)
-        return()
-    }
-    parts[length(parts)] = "json"
-    txomeai$url$path = paste(parts, collapse="/")
-    # Check for API data
-    response = download_file(txomeai, "data.csv")
-
-    if(response$status_code == 200)
-    {
-        txomeai$data = read.csv(response$path, header=TRUE)
-    }
-    else if (response$status_code == 404) 
-    {
-        message("API data is not available for this report. If it's an older report, re-run to generate API data.")
-        return()
-    }
-    else 
-    {
-        message("Query failed: ", response$status_code, "\n")
-        return()
-    }
-    return(update_glossary(txomeai))
-}
-
-#' Use to build our file index for a report
-#'
-#' @param txomeai The report connection object
-#' @return the connection object with the built index
-update_glossary = function(txomeai)
-{
-    txomeai$meta = vector("list", length(txomeai$data$app))
-    txomeai$sample = vector("list", length(txomeai$data$app))
-    for(i in seq_len(length(txomeai$data$app)))
-    {
-        app = txomeai$data[i, "app"]
-        r = download_file(txomeai, paste(app, "meta.csv", sep="."))
-        if(r$status_code == 200 & file.info(r$path)$size > 0)
-        {
-            txomeai$meta[[i]] = read.csv(r$path, header=TRUE)
-        }
-        else 
-        {
-            txomeai$meta[[i]] = data.frame()
-        }
-
-        r = download_file(txomeai, paste(app, "sample.csv", sep="."))
-        if(r$status_code == 200 & file.info(r$path)$size > 0)
-        {
-            txomeai$sample[[i]] = read.csv(r$path, header=TRUE)
-        }
-        else 
-        {
-            txomeai$sample[[i]] = data.frame()
-        }
-    }
-    names(txomeai$meta) = txomeai$data$app
-    names(txomeai$sample) = txomeai$data$app
-    txomeai$ls = txomeai_ls(txomeai)
-    return(txomeai)
-}
-
-#' Uses to test the API
-#'
-#' @param url The url to connect to
-#' @param output The file to write results to
-#' @return the connection object with the built index
-test_txomeai = function(url, output="Results.Rhistory")
-{
-    key = NULL
-    outfile = paste(dir, output, sep="/")
-    conn = file(outfile)
-    report = tryCatch(
-        txomeai_connect(url),
-        error=function(cond)
-        {
-            message("Failed on txomeai_connect: ")
-            message(cond, "\n")
-            return(NULL)
-        },
-        warning=function(cond)
-        {
-            message("Warning on txomeai_connect: ")
-            message(cond, "\n")
-            return(NULL)
-        }
-    )
-    sink(conn, append=TRUE)
-    sink(conn, append=TRUE, type="message")
-    if(is.null(report))
-    {
-        sink()
-        sink(type="message")
-        close(conn)
-        message("Connect failed without error or a warning.")
-        return(FALSE)
-    }
-
-    tables = tryCatch(
-        txomeai_ls(report),
-        error=function(cond)
-        {
-            message("Failed on txome_ls:")
-            message(cond, "\n")
-            return(NULL)
-        },
-        warning=function(cond)
-        {
-            message("Warnings on txomeai_ls: ")
-            message(cond, "\n")
-            return(NULL)
-        }
-    )
-    # Remove svg assets from test
-    tables = tables[key != "assets",]
-    if(is.null(tables) | length(tables) == 0)
-    {
-        if(length(tables) == 0)
-        {
-            message("No tables were returned from txomeai_ls.")
-        }
-        sink()
-        sink(type="message")
-        close(conn)
-        return(FALSE)
-    }
-    all_passed = TRUE
-    for(i in seq_len(length(tables$key)))
-    {
-        all_passed = all_passed & tryCatch(
-            {
-                message(paste("Start testing table: ", tables[i,], "\n"))
-                f = txomeai_get(tables[i,], report)
-                TRUE
-            },
-            error=function(cond)
-            {
-                message(paste("txomeai_get failed on: ", tables[i,], "\n"))
-                message("Error:")
-                message(cond, "\n")
-                return(FALSE)
-            },
-            warning=function(cond)
-            {
-                message(paste("Warning during processing table: ", tables[i,], "\n"))
-                message("Warning: ")
-                message(cond, "\n")
-                return(FALSE)
-            },
-            finally=message(paste("Finish testing table: ", tables[i,], "\n"))
-        )
-    }
-    sink()
-    sink(type="message")
-    close(conn)
-    return(all_passed)
-}
-
-#
-# User functions
-#
-
 #' Used to login, only use this function if you have a connection object and authentication is failing
 #'
+#' @importFrom getPass getPass
 #' @param txomeai The connection object
-#' @return True if login was successful, false otherwsie.
+#' @return True if login was successful, false otherwise.
+#' @export
 txomeai_login = function(txomeai)
 {
     login = txomeai$url
@@ -366,10 +20,27 @@ txomeai_login = function(txomeai)
     }
 }
 
-#' Contruct the connection list object and download or read the glossary
+#' Build a connection object to a RNA-seq analysis report
 #'
+#' @export
+#' @importFrom urltools url_parse
+#' @importFrom BiocFileCache bfccache
+#' @importFrom utils read.csv
 #' @param url The report URL to connect to
 #' @return The constructed connection object
+#'  \item{url}{The URL used to access the API data.}
+#'  \item{CAS}{The ID of the analysis.}
+#'  \item{instance}{The ID of the report.}
+#'  \item{dir}{The path to the query save location.}
+#'  \item{data}{A table of all the report page results.}
+#'  \item{meta}{A table with each row representing a data file.}
+#'  \item{sample}{A table with each row a sample and each column a data file.}
+#'  \item{ls}{A summary table of all the available data.}
+#' @references https://txomeai.oceangenomics.com/
+#' @examples
+#' domain = "https://txomeai.oceangenomics.com"
+#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report = txomeai_connect(paste(domain, path, sep="/"))
 txomeai_connect = function(url) 
 {
     txomeai = list()
@@ -437,10 +108,20 @@ txomeai_connect = function(url)
     return(update_glossary(txomeai))
 }
 
-#' Use to create a list of the available tables
+#' This function returns a table of all available data in the report
 #'
+#' @export
+#' @description
+#' Returns a table with columns key, name, and description.
+#' Each row represents a data query available in the report. 
 #' @param txomeai The report connection object
-#' @return a data frame containing the available data
+#' @return A data.table that each row represents a data query from the report.
+#' @examples
+#' domain = "https://txomeai.oceangenomics.com"
+#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report = txomeai_connect(paste(domain, path, sep="/"))
+#' report_ls = txomeai_ls(report)
+#' head(report_ls)
 txomeai_ls = function(txomeai) 
 {
     if(!is.null(txomeai$ls))
@@ -495,12 +176,23 @@ txomeai_ls = function(txomeai)
     return(unique(tables))
 }
 
-#' Used for collecting any data from the report
+#' Get data from the Txome.AI anaylsis report.
 #'
-#' @param txomeai the report connection object
-#' @param tableName the name from the ls table
-#' @param tableKey optionally provide the key value for a specific request
+#' @export
+#' @import data.table
+#' @param txomeai The connection object returned from txomeai_connect.
+#' @param tableName A name column value from the ls table.
+#' @param tableKey An optional key value from the ls table.
 #' @return a data.table with all results
+#'  \item{txomeai}{The connection object returned from txomeai_connect.}
+#'  \item{tableName}{A name column value from the ls table.}
+#'  \item{tableKey}{An optional key value from the ls table.}
+#' @exmaples 
+#' domain = "https://txomeai.oceangenomics.com"
+#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report = txomeai_connect(paste(domain, path, sep="/"))
+#' report_ls = txomeai_ls(report)
+#' report_samples = txomeai_get(report, "sampleName")
 txomeai_get = function(txomeai, tableName, tableKey=NULL)
 {
     to_return = NULL
@@ -578,11 +270,20 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 }
 
 
-#' Use to display a svg file
+#' Display a svg diagram.
 #'
-#' @param txomeai the report connection object
-#' @param ls_row the row from the ls table to display
-#' @return path to the downloaded svg file if download successful, NULL otherwsie
+#' @import magick
+#' @description This function will display a downloaded SVG in whatever way is available.
+#' @param txomeai The connection object that cookie has expired.
+#' @param ls_row An asset row from the txomeai_ls table.
+#' @return The SVG path if download is successful, null otherwise.
+#' @examples
+#' domain = "https://txomeai.oceangenomics.com"
+#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report = txomeai_connect(paste(domain, path, sep="/"))
+#' report_ls = txomeai_ls(report)
+#' assets = report_ls[report_ls$key == "assets", ]
+#' txomeai_display(report, assets[1,])
 txomeai_display = function(txomeai, ls_row)
 {
     if(!all(colnames(txomeai$ls) %in% colnames(ls_row)))

@@ -17,4 +17,5 @@ Description: This package is the API interface to txome.ai RNA-seq Analysis repo
 License: MIT + file LICENSE
 Imports: getPass, urltools, jsonlite, BiocFileCache, utils
 Depends: data.table, httr, magick
-biocViews: Workflow, GeneExpressionWorkflow
+biocViews: Workflow, GeneExpressionWorkflow, Software, , Infrastructure, DataImport 
+RoxygenNote: 7.1.2
