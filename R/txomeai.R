@@ -1,10 +1,3 @@
-#library(httr)
-#library(urltools)
-#library(jsonlite)
-#library(getPass)
-#library(data.table)
-#library(magick)
-
 # API Interface Functions
 
 #' Download an API file
