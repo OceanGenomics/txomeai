@@ -252,7 +252,27 @@ update_glossary = function(txomeai)
     names(txomeai$meta) = txomeai$data$app
     names(txomeai$sample) = txomeai$data$app
     txomeai$ls = txomeai_ls(txomeai)
+    txomeai$metaData = build_meta_data(txomeai)
+    txomeai$ls = txomeai$ls[!is.na(txomeai$ls$key),]
     return(txomeai)
+}
+
+#' Uses to test the API
+#'
+#' @param url The url to connect to
+#' @param output The file to write results to
+#' @return the connection object with the built index
+#' @noRd
+build_meta_table = function(txomeai)
+{
+    meta_rows = txomeai$ls[is.na(key),]
+    meta_rows = meta_rows[name != "sample" & name != "sampleName",]
+    metaData = txomeai_get(txomeai, "sampleName")
+    for(m in meta_rows[,"name"])
+    {
+        metaData = merge(metaData, fetch(m, NA, txomeai), by="sample")
+    }
+    return(metaData)
 }
 
 #' Uses to test the API

@@ -36,6 +36,7 @@ txomeai_login = function(txomeai)
 #'    \item{meta}{A table with each row representing a data file.}
 #'    \item{sample}{A table with each row a sample and each column a data file.}
 #'    \item{ls}{A summary table of all the available data.}
+#'    \item{metaData}{A table of all the used sample meta data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples
 #' domain = "https://txomeai.oceangenomics.com"
