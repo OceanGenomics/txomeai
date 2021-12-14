@@ -27,15 +27,15 @@ txomeai_login = function(txomeai)
 #' @importFrom BiocFileCache bfccache
 #' @importFrom utils read.csv
 #' @param url The report URL to connect to
-#' @return The constructed connection object
-#'  \item{url}{The URL used to access the API data.}
-#'  \item{CAS}{The ID of the analysis.}
-#'  \item{instance}{The ID of the report.}
-#'  \item{dir}{The path to the query save location.}
-#'  \item{data}{A table of all the report page results.}
-#'  \item{meta}{A table with each row representing a data file.}
-#'  \item{sample}{A table with each row a sample and each column a data file.}
-#'  \item{ls}{A summary table of all the available data.}
+#' @return A constructed list connection object.
+#'    \item{url}{The URL used to access the API data.}
+#'    \item{CAS}{The ID of the analysis.}
+#'    \item{instance}{The ID of the report.}
+#'    \item{dir}{The path to the query cache location.}
+#'    \item{data}{A table of all the report page results.}
+#'    \item{meta}{A table with each row representing a data file.}
+#'    \item{sample}{A table with each row a sample and each column a data file.}
+#'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples
 #' domain = "https://txomeai.oceangenomics.com"
