@@ -10,15 +10,13 @@ txomeai_connect(url)
 \item{url}{The report URL to connect to}
 }
 \value{
-The constructed connection object
- \item{url}{The URL used to access the API data.}
- \item{CAS}{The ID of the analysis.}
- \item{instance}{The ID of the report.}
- \item{dir}{The path to the query save location.}
- \item{data}{A table of all the report page results.}
- \item{meta}{A table with each row representing a data file.}
- \item{sample}{A table with each row a sample and each column a data file.}
- \item{ls}{A summary table of all the available data.}
+A constructed list connection object.
+   \item{url}{The URL used to access the API data.}
+   \item{CAS}{The ID of the analysis.}
+   \item{instance}{The ID of the report.}
+   \item{dir}{The path to the query cache location.}
+   \item{meta}{A table with all used sample meta data.}
+   \item{ls}{A summary table of all the available data.}
 }
 \description{
 Build a connection object to a RNA-seq analysis report

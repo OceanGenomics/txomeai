@@ -3,7 +3,7 @@
 #' @importFrom getPass getPass
 #' @param txomeai The connection object
 #' @return True if login was successful, false otherwise.
-#' @export
+#' @noRd
 txomeai_login = function(txomeai)
 {
     login = txomeai$url
@@ -32,11 +32,8 @@ txomeai_login = function(txomeai)
 #'    \item{CAS}{The ID of the analysis.}
 #'    \item{instance}{The ID of the report.}
 #'    \item{dir}{The path to the query cache location.}
-#'    \item{data}{A table of all the report page results.}
-#'    \item{meta}{A table with each row representing a data file.}
-#'    \item{sample}{A table with each row a sample and each column a data file.}
+#'    \item{meta}{A table with all used sample meta data.}
 #'    \item{ls}{A summary table of all the available data.}
-#'    \item{metaData}{A table of all the used sample meta data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples
 #' domain = "https://txomeai.oceangenomics.com"
@@ -109,74 +106,6 @@ txomeai_connect = function(url)
     return(update_glossary(txomeai))
 }
 
-#' This function returns a table of all available data in the report
-#'
-#' @export
-#' @description
-#' Returns a table with columns key, name, and description.
-#' Each row represents a data query available in the report. 
-#' @param txomeai The report connection object
-#' @return A data.table that each row represents a data query from the report.
-#' @examples
-#' domain = "https://txomeai.oceangenomics.com"
-#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-#' report = txomeai_connect(paste(domain, path, sep="/"))
-#' report_ls = txomeai_ls(report)
-#' head(report_ls)
-txomeai_ls = function(txomeai) 
-{
-    if(!is.null(txomeai$ls))
-    {
-        return(txomeai$ls)
-    }
-    table_header = c("key", "name", "description")
-    tables = data.table(matrix(ncol=3,nrow=0))
-    for(s in txomeai$sample)
-    {
-        if(length(colnames(s)) == 0)
-        {
-            next
-        }
-        for(c in colnames(s))
-        {
-            for(i in seq_len(length(s[,1])))
-            {
-                # Testing if the CAS is in the path works for web analysis
-                # Testing if the value path starts with sample works for local analysis
-                if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
-                {
-                    tables = rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"]))
-                }
-                else
-                {
-                    tables = rbind(tables, list(NA, c, "Meta data"))
-                    break
-                }
-            }
-        }
-    }
-    for(m in txomeai$meta)
-    {
-        if(length(m$tableName) > 0)
-        {
-            for(i in seq_len(length(m$tableName)))
-            {
-                if(m$stepName[i] == "all") {
-                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
-                } else if (m$stepName[i] == "assets") {
-                    tables = rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
-                } else {
-                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
-                }
-            }
-        }
-    }
-    tables = unique(tables)
-    colnames(tables) = table_header
-    tables$row = seq_len(length(tables$key))
-    return(unique(tables))
-}
-
 #' Get data from the Txome.AI anaylsis report.
 #'
 #' @export
@@ -192,7 +121,6 @@ txomeai_ls = function(txomeai)
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
-#' report_ls = txomeai_ls(report)
 #' report_samples = txomeai_get(report, "sampleName")
 txomeai_get = function(txomeai, tableName, tableKey=NULL)
 {
@@ -276,14 +204,13 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 #' @import magick
 #' @description This function will display a downloaded SVG in whatever way is available.
 #' @param txomeai The connection object that cookie has expired.
-#' @param ls_row An asset row from the txomeai_ls table.
+#' @param ls_row An asset row from the ls table.
 #' @return The SVG path if download is successful, null otherwise.
 #' @examples
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
-#' report_ls = txomeai_ls(report)
-#' assets = report_ls[report_ls$key == "assets", ]
+#' assets = report$ls[report$ls$key == "assets", ]
 #' txomeai_display(report, assets[1,])
 txomeai_display = function(txomeai, ls_row)
 {

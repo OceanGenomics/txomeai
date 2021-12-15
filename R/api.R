@@ -55,7 +55,7 @@ download_asset = function(txomeai, filename)
 #' @param name The name column value from the ls table
 #' @param key The key column value from the ls table
 #' @param txomeai The report connection object
-#' @param ls_row A row from the txomeai_ls datatable
+#' @param ls_row A row from the ls data.table
 #' @return a list containing the raws data
 #' @noRd
 fetch = function(name, key, txomeai)
@@ -217,6 +217,74 @@ local_connect = function(url, dir=".")
     return(update_glossary(txomeai))
 }
 
+
+#' This function returns a table of all available data in the report
+#'
+#' @description
+#' Returns a table with columns key, name, and description.
+#' Each row represents a data query available in the report. 
+#' @param txomeai The report connection object
+#' @return A data.table that each row represents a data query from the report.
+#' @examples
+#' domain = "https://txomeai.oceangenomics.com"
+#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report = txomeai_connect(paste(domain, path, sep="/"))
+#' head(report$ls)
+#' @noRd
+build_ls = function(txomeai) 
+{
+    if(!is.null(txomeai$ls))
+    {
+        return(txomeai$ls)
+    }
+    table_header = c("key", "name", "description")
+    tables = data.table(matrix(ncol=3,nrow=0))
+    for(s in txomeai$sample)
+    {
+        if(length(colnames(s)) == 0)
+        {
+            next
+        }
+        for(c in colnames(s))
+        {
+            for(i in seq_len(length(s[,1])))
+            {
+                # Testing if the CAS is in the path works for web analysis
+                # Testing if the value path starts with sample works for local analysis
+                if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
+                {
+                    tables = rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"]))
+                }
+                else
+                {
+                    tables = rbind(tables, list(NA, c, "Meta data"))
+                    break
+                }
+            }
+        }
+    }
+    for(m in txomeai$meta)
+    {
+        if(length(m$tableName) > 0)
+        {
+            for(i in seq_len(length(m$tableName)))
+            {
+                if(m$stepName[i] == "all") {
+                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
+                } else if (m$stepName[i] == "assets") {
+                    tables = rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
+                } else {
+                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
+                }
+            }
+        }
+    }
+    tables = unique(tables)
+    colnames(tables) = table_header
+    tables$row = seq_len(length(tables$key))
+    return(unique(tables))
+}
+
 #' Use to build our file index for a report
 #'
 #' @param txomeai The report connection object
@@ -251,9 +319,11 @@ update_glossary = function(txomeai)
     }
     names(txomeai$meta) = txomeai$data$app
     names(txomeai$sample) = txomeai$data$app
-    txomeai$ls = txomeai_ls(txomeai)
-    txomeai$metaData = build_meta_data(txomeai)
+    txomeai$ls = build_ls(txomeai)
+    txomeai$meta = build_meta_table(txomeai)
     txomeai$ls = txomeai$ls[!is.na(txomeai$ls$key),]
+    txomeai$data = NULL
+    txomeai$sample = NULL
     return(txomeai)
 }
 
@@ -313,7 +383,7 @@ test_txomeai = function(url, output="Results.Rhistory")
     }
 
     tables = tryCatch(
-        txomeai_ls(report),
+        build_ls(report),
         error=function(cond)
         {
             message("Failed on txome_ls:")
@@ -322,7 +392,7 @@ test_txomeai = function(url, output="Results.Rhistory")
         },
         warning=function(cond)
         {
-            message("Warnings on txomeai_ls: ")
+            message("Warnings on build_ls: ")
             message(cond, "\n")
             return(NULL)
         }
@@ -333,7 +403,7 @@ test_txomeai = function(url, output="Results.Rhistory")
     {
         if(length(tables) == 0)
         {
-            message("No tables were returned from txomeai_ls.")
+            message("No tables were returned.")
         }
         sink()
         sink(type="message")

@@ -9,7 +9,7 @@ txomeai_display(txomeai, ls_row)
 \arguments{
 \item{txomeai}{The connection object that cookie has expired.}
 
-\item{ls_row}{An asset row from the txomeai_ls table.}
+\item{ls_row}{An asset row from the ls table.}
 }
 \value{
 The SVG path if download is successful, null otherwise.
@@ -21,7 +21,6 @@ This function will display a downloaded SVG in whatever way is available.
 domain = "https://txomeai.oceangenomics.com"
 path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 report = txomeai_connect(paste(domain, path, sep="/"))
-report_ls = txomeai_ls(report)
-assets = report_ls[report_ls$key == "assets", ]
+assets = report$ls[report$ls$key == "assets", ]
 txomeai_display(report, assets[1,])
 }

@@ -2,8 +2,6 @@
 
 export(txomeai_connect)
 export(txomeai_get)
-export(txomeai_login)
-export(txomeai_ls)
 import(data.table)
 import(httr)
 import(magick)
