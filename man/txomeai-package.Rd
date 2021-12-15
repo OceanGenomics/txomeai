@@ -29,7 +29,8 @@ https://txomeai.oceangenomics.com/
 domain = "https://txomeai.oceangenomics.com"
 path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 report = txomeai_connect(paste(domain, path, sep="/"))
-report_ls = txomeai_ls(report)
+head(report$ls)
+head(report$meta)
 report_sv = txomeai_get(report, "StructuralVariants")
 report_samples = txomeai_get(report, "sampleName")
 }

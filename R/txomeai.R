@@ -117,7 +117,7 @@ txomeai_connect = function(url)
 #'  \item{txomeai}{The connection object returned from txomeai_connect.}
 #'  \item{tableName}{A name column value from the ls table.}
 #'  \item{tableKey}{An optional key value from the ls table.}
-#' @exmaples 
+#' @examples 
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
