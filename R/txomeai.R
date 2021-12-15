@@ -32,7 +32,7 @@ txomeai_login = function(txomeai)
 #'    \item{CAS}{The ID of the analysis.}
 #'    \item{instance}{The ID of the report.}
 #'    \item{dir}{The path to the query cache location.}
-#'    \item{meta}{A table with all used sample meta data.}
+#'    \item{meta}{A table with sample meta data.}
 #'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples
@@ -113,15 +113,12 @@ txomeai_connect = function(url)
 #' @param txomeai The connection object returned from txomeai_connect.
 #' @param tableName A name column value from the ls table.
 #' @param tableKey An optional key value from the ls table.
-#' @return a data.table with all results
-#'  \item{txomeai}{The connection object returned from txomeai_connect.}
-#'  \item{tableName}{A name column value from the ls table.}
-#'  \item{tableKey}{An optional key value from the ls table.}
+#' @return A data.table with all results.
 #' @examples 
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
-#' report_samples = txomeai_get(report, "sampleName")
+#' report_fastp = txomeai_get(report, "FastpJSON")
 txomeai_get = function(txomeai, tableName, tableKey=NULL)
 {
     to_return = NULL

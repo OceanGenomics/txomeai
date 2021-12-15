@@ -49,7 +49,7 @@ heatmap(as.matrix(spearman[,2:(length(colnames(spearman))-1)]),
     labRow=spearman$sample, main="Spearman Correlation")
 @
 
-\section{ High Varaince Genes Figure }
+\section{ High Variance Genes Figure }
 
 The "HighVarianceGenes" table contains the step meta data and the raw
 TPM expression values for every sample in the \textbf{get} column.
