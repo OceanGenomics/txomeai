@@ -335,6 +335,7 @@ update_glossary = function(txomeai)
 #' @noRd
 build_meta_table = function(txomeai)
 {
+    name = NULL
     meta_rows = txomeai$ls[is.na(key),]
     meta_rows = meta_rows[name != "sample" & name != "sampleName",]
     metaData = txomeai_get(txomeai, "sampleName")

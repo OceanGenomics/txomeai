@@ -15,13 +15,14 @@ A constructed list connection object.
    \item{CAS}{The ID of the analysis.}
    \item{instance}{The ID of the report.}
    \item{dir}{The path to the query cache location.}
-   \item{meta}{A table with all used sample meta data.}
+   \item{meta}{A table with sample meta data.}
    \item{ls}{A summary table of all the available data.}
 }
 \description{
 Build a connection object to a RNA-seq analysis report
 }
 \examples{
+dontrun
 domain = "https://txomeai.oceangenomics.com"
 path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 report = txomeai_connect(paste(domain, path, sep="/"))

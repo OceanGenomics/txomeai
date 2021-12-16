@@ -14,11 +14,15 @@ txomeai_get(txomeai, tableName, tableKey = NULL)
 \item{tableKey}{An optional key value from the ls table.}
 }
 \value{
-a data.table with all results
- \item{txomeai}{The connection object returned from txomeai_connect.}
- \item{tableName}{A name column value from the ls table.}
- \item{tableKey}{An optional key value from the ls table.}
+A data.table with all results.
 }
 \description{
 Get data from the Txome.AI anaylsis report.
+}
+\examples{
+dontrun
+domain = "https://txomeai.oceangenomics.com"
+path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report = txomeai_connect(paste(domain, path, sep="/"))
+report_fastp = txomeai_get(report, "FastpJSON")
 }
