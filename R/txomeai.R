@@ -35,7 +35,7 @@ txomeai_login = function(txomeai)
 #'    \item{meta}{A table with sample meta data.}
 #'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
-#' @examples
+#' @examples dontrun
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
@@ -114,7 +114,7 @@ txomeai_connect = function(url)
 #' @param tableName A name column value from the ls table.
 #' @param tableKey An optional key value from the ls table.
 #' @return A data.table with all results.
-#' @examples 
+#' @examples dontrun
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
@@ -203,7 +203,7 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 #' @param txomeai The connection object that cookie has expired.
 #' @param ls_row An asset row from the ls table.
 #' @return The SVG path if download is successful, null otherwise.
-#' @examples
+#' @examples dontrun
 #' domain = "https://txomeai.oceangenomics.com"
 #' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report = txomeai_connect(paste(domain, path, sep="/"))
