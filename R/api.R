@@ -137,6 +137,7 @@ init_dir = function(dir, cas, inst)
 #' @noRd
 get_sample_meta = function(txomeai, table)
 {
+    message("get_sample_meta: ", table)
     col_index = vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
     if(all(!col_index))
     {
@@ -339,7 +340,7 @@ build_meta_table = function(txomeai)
     meta_rows = txomeai$ls[is.na(key),]
     meta_rows = meta_rows[name != "sample" & name != "sampleName",]
     metaData = get_sample_meta(txomeai, "sampleName")
-    for(m in meta_rows[,"name"])
+    for(m in unlist(meta_rows[,"name"]))
     {
         metaData = merge(metaData, get_sample_meta(txomeai, m), by="sample")
     }
