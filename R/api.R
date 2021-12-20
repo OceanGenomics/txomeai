@@ -338,10 +338,10 @@ build_meta_table = function(txomeai)
     name = NULL
     meta_rows = txomeai$ls[is.na(key),]
     meta_rows = meta_rows[name != "sample" & name != "sampleName",]
-    metaData = txomeai_get(txomeai, "sampleName")
+    metaData = get_sample_meta(txomeai, "sampleName")
     for(m in meta_rows[,"name"])
     {
-        metaData = merge(metaData, fetch(m, NA, txomeai), by="sample")
+        metaData = merge(metaData, get_sample_meta(txomeai, m), by="sample")
     }
     return(metaData)
 }
