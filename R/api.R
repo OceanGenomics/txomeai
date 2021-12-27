@@ -323,6 +323,8 @@ update_glossary = function(txomeai)
     txomeai$ls = build_ls(txomeai)
     txomeai$meta = build_meta_table(txomeai)
     txomeai$ls = txomeai$ls[!is.na(txomeai$ls$key),]
+    txomeai$assets = txomeai$ls[txomeai$ls$key == "assets",]
+    txomeai$ls = txomeai$ls[txomeai$ls$key != "assets",]
     txomeai$data = NULL
     txomeai$sample = NULL
     return(txomeai)
