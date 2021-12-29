@@ -198,6 +198,7 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 
 #' Display a svg diagram.
 #'
+#' @export
 #' @import magick
 #' @description This function will display a downloaded SVG in whatever way is available.
 #' @param txomeai The connection object that cookie has expired.
