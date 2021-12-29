@@ -69,7 +69,6 @@ fetch = function(name, key, txomeai)
     if(r$status_code == 200)
     {
         sub = jsonlite::fromJSON(r$path)
-        message("Downloaded successfully: ", file)
         return(sub)
     }
     else

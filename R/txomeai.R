@@ -187,7 +187,9 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
     key_col = rep(sub$key, sub$row_count)
     # Set column types
     num_cols = colnames(to_return)[sub$get[[1]]$data$types == "numeric"]
-    to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
+    if(length(num_cols) > 0) {
+        to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
+    }
     # Set column names
     colnames(to_return) = sub$get[[1]]$data$header
     # Add id column
