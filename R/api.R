@@ -319,20 +319,42 @@ update_glossary <- function(txomeai)
     names(txomeai$meta) <- txomeai$data$app
     names(txomeai$sample) <- txomeai$data$app
     txomeai$ls <- build_ls(txomeai)
-    txomeai$meta <- build_meta_table(txomeai)
+    txomeai$sample_meta <- build_meta_table(txomeai)
+    txomeai$comparative_meta <- build_comp_table(txomeai)
     txomeai$ls <- txomeai$ls[!is.na(txomeai$ls$key),]
     txomeai$assets <- txomeai$ls[txomeai$ls$key == "assets",]
     txomeai$ls <- txomeai$ls[txomeai$ls$key != "assets",]
     txomeai$data <- NULL
     txomeai$sample <- NULL
+    txomeai$meta <- NULL
     return(txomeai)
 }
 
-#' Uses to test the API
+#' Construct the comparative analysis meta data table.
 #'
-#' @param url The url to connect to
-#' @param output The file to write results to
-#' @return the connection object with the built index
+#' @param txomeai The in-construction connection object. 
+#' @return a comparative analysis meta data.table
+#' @noRd
+build_comp_table <- function(txomeai)
+{
+    row_count = vapply(txomeai$meta, FUN=nrow, FUN.VALUE=0)
+    meta_set = txomeai$meta[row_count > 0]
+    if(length(meta_set) == 0)
+    {
+        return(data.frame(stepName=c(), set1=c(), set2=c()))
+    }
+    to_return = meta_set[[1]][,c("stepName", "set1", "set2")]
+    for(m in meta_set)
+    {
+        to_return = rbind(to_return, m[,c("stepName", "set1", "set2")])
+    }
+    return(unique(to_return))
+}
+
+#' Construct the sample related meta data table.
+#'
+#' @param txomeai The connection object
+#' @return the sample meta data.table
 #' @noRd
 build_meta_table <- function(txomeai)
 {
