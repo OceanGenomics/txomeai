@@ -20,7 +20,8 @@ sample_count = length(unique(contam$key))
 result_type = length(unique(contam$type))
 contam_matrix = matrix(contam$ratio, nrow=result_type, ncol=sample_count, 
     dimnames=list(unique(contam$type), unique(contam$key)))
-barplot(contam_matrix)
+par(las=2)
+barplot(contam_matrix, ylab="Proportion")
 @
 
 \section{ Transcript Integrity Figure }
@@ -33,7 +34,8 @@ the expected histogram.
 <<eval=FALSE>>=
 report = txomeai::txomeai_connect(url)
 tis = txomeai::txomeai_get(report, "TranscriptIntegrityStats")
-hist(tis$get[[1]]$data$raw$transcript_stats$tin, main=tis$description[[1]], breaks=100)
+hist(tis$get[[1]]$data$raw$transcript_stats$tin, 
+    main=tis$description[[1]], breaks=100, xlab="TIN")
 @
 
 \section{ Spearman Correlation Heatmap }
