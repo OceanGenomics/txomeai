@@ -19,9 +19,9 @@ This function will display a downloaded SVG in whatever way is available.
 }
 \examples{
 dontrun
-domain = "https://txomeai.oceangenomics.com"
-path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-report = txomeai_connect(paste(domain, path, sep="/"))
-assets = report$ls[report$ls$key == "assets", ]
+domain <- "https://txomeai.oceangenomics.com"
+path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+report <- txomeai_connect(paste(domain, path, sep="/"))
+assets <- report$ls[report$ls$key == "assets", ]
 txomeai_display(report, assets[1,])
 }

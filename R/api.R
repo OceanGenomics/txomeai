@@ -4,34 +4,34 @@
 #' @param key a string that uniquely identifies the correct file. 
 #' @return a list with $status_code and $path to downloaded file.
 #' @noRd
-download_file = function(txomeai, filename, key="", overwrite=FALSE)
+download_file <- function(txomeai, filename, key="", overwrite=FALSE)
 {
-    downloadURL = txomeai$url
-    downloadURL$path = paste(downloadURL$path, filename, sep="/")
-    key_dir = txomeai$dir
+    downloadURL <- txomeai$url
+    downloadURL$path <- paste(downloadURL$path, filename, sep="/")
+    key_dir <- txomeai$dir
     if(!is.na(key) && nchar(key) > 0)
     {
-        key_dir = file.path(txomeai$dir, key)
-        downloadURL$path = paste(txomeai$url$path, key, filename, sep="/")
+        key_dir <- file.path(txomeai$dir, key)
+        downloadURL$path <- paste(txomeai$url$path, key, filename, sep="/")
     }
     if(!dir.exists(key_dir))
     {
         dir.create(key_dir)
     }
-    outfile = file.path(key_dir, filename)
-    resp = NULL
+    outfile <- file.path(key_dir, filename)
+    resp <- NULL
     if(!file.exists(outfile) || overwrite)
     {
-        r = httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
+        r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
         if(r$status_code != 200 && file.exists(outfile))
         {
             file.remove(outfile)
         }
-        resp = list(status_code=r$status_code, path=outfile)
+        resp <- list(status_code=r$status_code, path=outfile)
     }
     else
     {
-        resp = list(status_code=200, path=outfile)
+        resp <- list(status_code=200, path=outfile)
     }
     return(resp)
 }
@@ -42,10 +42,10 @@ download_file = function(txomeai, filename, key="", overwrite=FALSE)
 #' @param filename the filename of the file to download.
 #' @return a list with $status_code and $path to downloaded file.
 #' @noRd
-download_asset = function(txomeai, filename)
+download_asset <- function(txomeai, filename)
 {
-    asset = txomeai
-    asset$url$path = sub("json", "assets", asset$url$path, fixed=TRUE)
+    asset <- txomeai
+    asset$url$path <- sub("json", "assets", asset$url$path, fixed=TRUE)
     return(download_file(asset, filename))
 }
 
@@ -58,17 +58,17 @@ download_asset = function(txomeai, filename)
 #' @param ls_row A row from the ls data.table
 #' @return a list containing the raws data
 #' @noRd
-fetch = function(name, key, txomeai)
+fetch <- function(name, key, txomeai)
 {
     if(is.na(key))
     {
         return(get_sample_meta(txomeai, name))
     }
-    file = paste(name, "json.gz", sep=".")
-    r = download_file(txomeai, file, key)
+    file <- paste(name, "json.gz", sep=".")
+    r <- download_file(txomeai, file, key)
     if(r$status_code == 200)
     {
-        sub = jsonlite::fromJSON(r$path)
+        sub <- jsonlite::fromJSON(r$path)
         return(sub)
     }
     else
@@ -85,11 +85,11 @@ fetch = function(name, key, txomeai)
 #' @param txomeai the connection object
 #' @return true if connected, false otherwise
 #' @noRd
-test_auth = function(txomeai)
+test_auth <- function(txomeai)
 {
-    list_cas = txomeai$url
-    list_cas$path = "api/accounts/current"
-    resp = httr::GET(urltools::url_compose(list_cas))
+    list_cas <- txomeai$url
+    list_cas$path <- "api/accounts/current"
+    resp <- httr::GET(urltools::url_compose(list_cas))
     if(resp$status_code == 200)
     {
         return(TRUE)
@@ -108,19 +108,19 @@ test_auth = function(txomeai)
 #' @param cas the connected cas
 #' @return the normalized dir path
 #' @noRd
-init_dir = function(dir, cas, inst)
+init_dir <- function(dir, cas, inst)
 {
-    dir = gsub("/$|\\\\$", "", dir, perl=TRUE)
+    dir <- gsub("/$|\\\\$", "", dir, perl=TRUE)
     if(!dir.exists(dir))
     {
         dir.create(dir)
     }
-    cas_dir = file.path(dir, cas)
+    cas_dir <- file.path(dir, cas)
     if(!dir.exists(cas_dir))
     {
         dir.create(cas_dir)
     }
-    inst_dir = file.path(cas_dir, inst)
+    inst_dir <- file.path(cas_dir, inst)
     if(!dir.exists(inst_dir))
     {
         dir.create(inst_dir)
@@ -134,10 +134,9 @@ init_dir = function(dir, cas, inst)
 #' @param table the name of the table to download.
 #' @return NULL or a data.table with sample meta data
 #' @noRd
-get_sample_meta = function(txomeai, table)
+get_sample_meta <- function(txomeai, table)
 {
-    message("get_sample_meta: ", table)
-    col_index = vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
+    col_index <- vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
     if(all(!col_index))
     {
         return(NULL)
@@ -153,18 +152,18 @@ get_sample_meta = function(txomeai, table)
 #' @param url_path A vector of the urls path elements
 #' @return A list containing "cas" and "instance"
 #' @noRd
-get_cas_and_instance = function(url_path) 
+get_cas_and_instance <- function(url_path) 
 {
-    to_return = list(cas=NULL, instance=NULL)
-    cas_i = grep("\\w+-\\w+-\\w+-\\w+-\\w+", url_path, perl=TRUE)
-    inst_i = grep("\\d+-\\d+-\\d+T\\d+", url_path, perl=TRUE)
+    to_return <- list(cas=NULL, instance=NULL)
+    cas_i <- grep("\\w+-\\w+-\\w+-\\w+-\\w+", url_path, perl=TRUE)
+    inst_i <- grep("\\d+-\\d+-\\d+T\\d+", url_path, perl=TRUE)
     if(cas_i > 0)
     {
-        to_return$cas = url_path[cas_i]
+        to_return$cas <- url_path[cas_i]
     } 
     if(inst_i > 0)
     {
-        to_return$instance = url_path[inst_i]
+        to_return$instance <- url_path[inst_i]
     }
     return(to_return)
 }
@@ -175,34 +174,34 @@ get_cas_and_instance = function(url_path)
 #' @param dir (OPTIONAL) The directory to save data to.
 #' @return The constructed connection object
 #' @noRd
-local_connect = function(url, dir=".") 
+local_connect <- function(url, dir=".") 
 {
-    txomeai = list()
+    txomeai <- list()
     # Validate and construct URL
-    txomeai$url = urltools::url_parse(url)
-    txomeai$CAS = ""
-    txomeai$instance = ""
+    txomeai$url <- urltools::url_parse(url)
+    txomeai$CAS <- ""
+    txomeai$instance <- ""
 
-    parts = unlist(strsplit(txomeai$url$path, "/"))
-    workingCAS = parts[2]
-    workingInstance = parts[3]
-    txomeai$CAS = workingCAS
-    txomeai$instance = workingInstance
-    txomeai$dir = init_dir(dir, workingCAS, workingInstance)
+    parts <- unlist(strsplit(txomeai$url$path, "/"))
+    workingCAS <- parts[2]
+    workingInstance <- parts[3]
+    txomeai$CAS <- workingCAS
+    txomeai$instance <- workingInstance
+    txomeai$dir <- init_dir(dir, workingCAS, workingInstance)
     # Test that the dir has been setup appropriately
     if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
     {
         message("Insufficent access to working directory:", txomeai$dir)
         return()
     }
-    parts[length(parts)] = "json"
-    txomeai$url$path = paste(parts, collapse="/")
+    parts[length(parts)] <- "json"
+    txomeai$url$path <- paste(parts, collapse="/")
     # Check for API data
-    response = download_file(txomeai, "data.csv")
+    response <- download_file(txomeai, "data.csv")
 
     if(response$status_code == 200)
     {
-        txomeai$data = read.csv(response$path, header=TRUE)
+        txomeai$data <- read.csv(response$path, header=TRUE)
     }
     else if (response$status_code == 404) 
     {
@@ -226,19 +225,19 @@ local_connect = function(url, dir=".")
 #' @param txomeai The report connection object
 #' @return A data.table that each row represents a data query from the report.
 #' @examples
-#' domain = "https://txomeai.oceangenomics.com"
-#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-#' report = txomeai_connect(paste(domain, path, sep="/"))
+#' domain <- "https://txomeai.oceangenomics.com"
+#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' head(report$ls)
 #' @noRd
-build_ls = function(txomeai) 
+build_ls <- function(txomeai) 
 {
     if(!is.null(txomeai$ls))
     {
         return(txomeai$ls)
     }
-    table_header = c("key", "name", "description")
-    tables = data.table(matrix(ncol=3,nrow=0))
+    table_header <- c("key", "name", "description")
+    tables <- data.table(matrix(ncol=3,nrow=0))
     for(s in txomeai$sample)
     {
         if(length(colnames(s)) == 0)
@@ -253,11 +252,11 @@ build_ls = function(txomeai)
                 # Testing if the value path starts with sample works for local analysis
                 if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
                 {
-                    tables = rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"]))
+                    tables <- rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"]))
                 }
                 else
                 {
-                    tables = rbind(tables, list(NA, c, "Meta data"))
+                    tables <- rbind(tables, list(NA, c, "Meta data"))
                     break
                 }
             }
@@ -270,18 +269,18 @@ build_ls = function(txomeai)
             for(i in seq_len(length(m$tableName)))
             {
                 if(m$stepName[i] == "all") {
-                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
+                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
                 } else if (m$stepName[i] == "assets") {
-                    tables = rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
+                    tables <- rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
                 } else {
-                    tables = rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
+                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
                 }
             }
         }
     }
-    tables = unique(tables)
-    colnames(tables) = table_header
-    tables$row = seq_len(length(tables$key))
+    tables <- unique(tables)
+    colnames(tables) <- table_header
+    tables$row <- seq_len(length(tables$key))
     return(unique(tables))
 }
 
@@ -290,42 +289,42 @@ build_ls = function(txomeai)
 #' @param txomeai The report connection object
 #' @return the connection object with the built index
 #' @noRd
-update_glossary = function(txomeai)
+update_glossary <- function(txomeai)
 {
-    txomeai$meta = vector("list", length(txomeai$data$app))
-    txomeai$sample = vector("list", length(txomeai$data$app))
+    txomeai$meta <- vector("list", length(txomeai$data$app))
+    txomeai$sample <- vector("list", length(txomeai$data$app))
     for(i in seq_len(length(txomeai$data$app)))
     {
-        app = txomeai$data[i, "app"]
-        r = download_file(txomeai, paste(app, "meta.csv", sep="."))
+        app <- txomeai$data[i, "app"]
+        r <- download_file(txomeai, paste(app, "meta.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$meta[[i]] = read.csv(r$path, header=TRUE)
+            txomeai$meta[[i]] <- read.csv(r$path, header=TRUE)
         }
         else 
         {
-            txomeai$meta[[i]] = data.frame()
+            txomeai$meta[[i]] <- data.frame()
         }
 
-        r = download_file(txomeai, paste(app, "sample.csv", sep="."))
+        r <- download_file(txomeai, paste(app, "sample.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$sample[[i]] = read.csv(r$path, header=TRUE)
+            txomeai$sample[[i]] <- read.csv(r$path, header=TRUE)
         }
         else 
         {
-            txomeai$sample[[i]] = data.frame()
+            txomeai$sample[[i]] <- data.frame()
         }
     }
-    names(txomeai$meta) = txomeai$data$app
-    names(txomeai$sample) = txomeai$data$app
-    txomeai$ls = build_ls(txomeai)
-    txomeai$meta = build_meta_table(txomeai)
-    txomeai$ls = txomeai$ls[!is.na(txomeai$ls$key),]
-    txomeai$assets = txomeai$ls[txomeai$ls$key == "assets",]
-    txomeai$ls = txomeai$ls[txomeai$ls$key != "assets",]
-    txomeai$data = NULL
-    txomeai$sample = NULL
+    names(txomeai$meta) <- txomeai$data$app
+    names(txomeai$sample) <- txomeai$data$app
+    txomeai$ls <- build_ls(txomeai)
+    txomeai$meta <- build_meta_table(txomeai)
+    txomeai$ls <- txomeai$ls[!is.na(txomeai$ls$key),]
+    txomeai$assets <- txomeai$ls[txomeai$ls$key == "assets",]
+    txomeai$ls <- txomeai$ls[txomeai$ls$key != "assets",]
+    txomeai$data <- NULL
+    txomeai$sample <- NULL
     return(txomeai)
 }
 
@@ -335,15 +334,15 @@ update_glossary = function(txomeai)
 #' @param output The file to write results to
 #' @return the connection object with the built index
 #' @noRd
-build_meta_table = function(txomeai)
+build_meta_table <- function(txomeai)
 {
-    name = NULL
-    meta_rows = txomeai$ls[is.na(key),]
-    meta_rows = meta_rows[name != "sample" & name != "sampleName",]
-    metaData = get_sample_meta(txomeai, "sampleName")
+    name <- NULL
+    meta_rows <- txomeai$ls[is.na(key),]
+    meta_rows <- meta_rows[name != "sample" & name != "sampleName",]
+    metaData <- get_sample_meta(txomeai, "sampleName")
     for(m in unlist(meta_rows[,"name"]))
     {
-        metaData = merge(metaData, get_sample_meta(txomeai, m), by="sample")
+        metaData <- merge(metaData, get_sample_meta(txomeai, m), by="sample")
     }
     return(metaData)
 }
@@ -354,12 +353,12 @@ build_meta_table = function(txomeai)
 #' @param output The file to write results to
 #' @return the connection object with the built index
 #' @noRd
-test_txomeai = function(url, output="Results.Rhistory")
+test_txomeai <- function(url, output="Results.Rhistory")
 {
-    key = NULL
-    outfile = paste(dir, output, sep="/")
-    conn = file(outfile)
-    report = tryCatch(
+    key <- NULL
+    outfile <- paste(dir, output, sep="/")
+    conn <- file(outfile)
+    report <- tryCatch(
         txomeai_connect(url),
         error=function(cond)
         {
@@ -385,7 +384,7 @@ test_txomeai = function(url, output="Results.Rhistory")
         return(FALSE)
     }
 
-    tables = tryCatch(
+    tables <- tryCatch(
         build_ls(report),
         error=function(cond)
         {
@@ -401,7 +400,7 @@ test_txomeai = function(url, output="Results.Rhistory")
         }
     )
     # Remove svg assets from test
-    tables = tables[key != "assets",]
+    tables <- tables[key != "assets",]
     if(is.null(tables) | length(tables) == 0)
     {
         if(length(tables) == 0)
@@ -413,13 +412,13 @@ test_txomeai = function(url, output="Results.Rhistory")
         close(conn)
         return(FALSE)
     }
-    all_passed = TRUE
+    all_passed <- TRUE
     for(i in seq_len(length(tables$key)))
     {
-        all_passed = all_passed & tryCatch(
+        all_passed <- all_passed & tryCatch(
             {
                 message(paste("Start testing table: ", tables[i,], "\n"))
-                f = txomeai_get(tables[i,], report)
+                f <- txomeai_get(tables[i,], report)
                 TRUE
             },
             error=function(cond)

@@ -4,11 +4,11 @@
 #' @param txomeai The connection object
 #' @return True if login was successful, false otherwise.
 #' @noRd
-txomeai_login = function(txomeai)
+txomeai_login <- function(txomeai)
 {
-    login = txomeai$url
-    login$path = "api/accounts/password-login"
-    resp = httr::POST(urltools::url_compose(login), body=list(username=readline("Enter username: "), password=getPass::getPass("Enter password: ")), encode="json")
+    login <- txomeai$url
+    login$path <- "api/accounts/password-login"
+    resp <- httr::POST(urltools::url_compose(login), body=list(username=readline("Enter username: "), password=getPass::getPass("Enter password: ")), encode="json")
     if(resp$status_code == 200)
     {
         return(TRUE)
@@ -36,46 +36,46 @@ txomeai_login = function(txomeai)
 #'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples dontrun
-#' domain = "https://txomeai.oceangenomics.com"
-#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-#' report = txomeai_connect(paste(domain, path, sep="/"))
-txomeai_connect = function(url) 
+#' domain <- "https://txomeai.oceangenomics.com"
+#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report <- txomeai_connect(paste(domain, path, sep="/"))
+txomeai_connect <- function(url) 
 {
-    txomeai = list()
+    txomeai <- list()
     # Validate and construct URL
-    txomeai$url = urltools::url_parse(url)
-    txomeai$CAS = ""
-    txomeai$instance = ""
+    txomeai$url <- urltools::url_parse(url)
+    txomeai$CAS <- ""
+    txomeai$instance <- ""
     if(!grepl("oceangenomics.com", txomeai$url$domain, fixed=TRUE) & !grepl("transcriptome.ai", txomeai$url$domain, fixed=TRUE))
     {
         message("Error: URL destination is unexpected.")
         return()
     }
 
-    parts = unlist(strsplit(txomeai$url$path, "/"))
+    parts <- unlist(strsplit(txomeai$url$path, "/"))
     if(length(parts) < 6) 
     {
         message("Error: URL path is unexpected.")
         return()
     }
-    meta = get_cas_and_instance(parts)
+    meta <- get_cas_and_instance(parts)
     if(is.null(meta$cas) || is.null(meta$instance))
     {
         message("Error: Expected elements not found in path.")
         return()
     }
-    workingCAS = meta$cas
-    workingInstance = meta$instance
-    txomeai$CAS = workingCAS
-    txomeai$instance = workingInstance
-    txomeai$dir = init_dir(BiocFileCache::bfccache(), workingCAS, workingInstance)
+    workingCAS <- meta$cas
+    workingInstance <- meta$instance
+    txomeai$CAS <- workingCAS
+    txomeai$instance <- workingInstance
+    txomeai$dir <- init_dir(BiocFileCache::bfccache(), workingCAS, workingInstance)
     # Test that the dir has been setup appropriately
     if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
     {
         message("Insufficent access to working directory:", txomeai$dir)
         return()
     }
-    txomeai$url$path = paste("api", "pipeline-output", workingCAS, workingInstance, "report", "json", sep="/")
+    txomeai$url$path <- paste("api", "pipeline-output", workingCAS, workingInstance, "report", "json", sep="/")
 
     if(!test_auth(txomeai))
     {        
@@ -87,11 +87,11 @@ txomeai_connect = function(url)
     }
     
     # Check for API data
-    response = download_file(txomeai, "data.csv")
+    response <- download_file(txomeai, "data.csv")
 
     if(response$status_code == 200)
     {
-        txomeai$data = read.csv(response$path, header=TRUE)
+        txomeai$data <- read.csv(response$path, header=TRUE)
     }
     else if (response$status_code == 404) 
     {
@@ -115,20 +115,20 @@ txomeai_connect = function(url)
 #' @param tableKey An optional key value from the ls table.
 #' @return A data.table with all results.
 #' @examples dontrun
-#' domain = "https://txomeai.oceangenomics.com"
-#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-#' report = txomeai_connect(paste(domain, path, sep="/"))
-#' report_fastp = txomeai_get(report, "FastpJSON")
-txomeai_get = function(txomeai, tableName, tableKey=NULL)
+#' domain <- "https://txomeai.oceangenomics.com"
+#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report <- txomeai_connect(paste(domain, path, sep="/"))
+#' report_fastp <- txomeai_get(report, "FastpJSON")
+txomeai_get <- function(txomeai, tableName, tableKey=NULL)
 {
-    to_return = NULL
-    header = NULL
-    types = NULL
+    to_return <- NULL
+    header <- NULL
+    types <- NULL
     # name and row_count must be initilized to pass R CMD check 
-    row_count = NULL
-    name = NULL
-    sub = NULL
-    key = NULL
+    row_count <- NULL
+    name <- NULL
+    sub <- NULL
+    key <- NULL
     # Error checking
     if(!(tableName %in% txomeai$ls$name))
     {
@@ -143,11 +143,11 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 
     if(is.null(tableKey))
     {
-        sub = txomeai$ls[name == tableName, ]
+        sub <- txomeai$ls[name == tableName, ]
     } else if (is.na(tableKey)) {
-        sub = txomeai$ls[name == tableName & is.na(key), ]
+        sub <- txomeai$ls[name == tableName & is.na(key), ]
     } else {
-        sub = txomeai$ls[name == tableName & key == tableKey,]
+        sub <- txomeai$ls[name == tableName & key == tableKey,]
     }
 
     if(nrow(sub) == 0) {
@@ -164,36 +164,36 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
     }
     
     # Get raw list results for each row and add to data.table as column 'get'
-    sub$get = apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, txomeai)
+    sub$get <- apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, txomeai)
     # Return results if data_type isn't table
     if(sub$get[[1]]$data_type != "table")
     {
         return(sub)
     }
     # Filter all empty table get results
-    get_row_count = function(x){ return(nrow(x[[1]]$data$rows));}
+    get_row_count <- function(x){ return(nrow(x[[1]]$data$rows));}
     sub[,row_count := get_row_count(get), by=key]
     if(nrow(sub[row_count > 0,]) == 0)
     {
-        to_return = data.table(matrix(ncol=length(sub$get[[1]]$data$header), nrow=0))
-        colnames(to_return) = sub$get[[1]]$data$header
+        to_return <- data.table(matrix(ncol=length(sub$get[[1]]$data$header), nrow=0))
+        colnames(to_return) <- sub$get[[1]]$data$header
         return(to_return)
     }
-    sub = sub[row_count > 0,]
+    sub <- sub[row_count > 0,]
 
     # Build the output data.table from the raw data rows
-    to_return = data.table(do.call("rbind", lapply(sub$get, FUN=function(x){return(x$data$rows);})))
+    to_return <- data.table(do.call("rbind", lapply(sub$get, FUN=function(x){return(x$data$rows);})))
     # Build the key column for the output table
-    key_col = rep(sub$key, sub$row_count)
+    key_col <- rep(sub$key, sub$row_count)
     # Set column types
-    num_cols = colnames(to_return)[sub$get[[1]]$data$types == "numeric"]
+    num_cols <- colnames(to_return)[sub$get[[1]]$data$types == "numeric"]
     if(length(num_cols) > 0) {
         to_return[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
     }
     # Set column names
-    colnames(to_return) = sub$get[[1]]$data$header
+    colnames(to_return) <- sub$get[[1]]$data$header
     # Add id column
-    to_return$key = key_col
+    to_return$key <- key_col
     return(to_return) 
 }
 
@@ -207,26 +207,26 @@ txomeai_get = function(txomeai, tableName, tableKey=NULL)
 #' @param ls_row An asset row from the ls table.
 #' @return The SVG path if download is successful, null otherwise.
 #' @examples dontrun
-#' domain = "https://txomeai.oceangenomics.com"
-#' path = "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
-#' report = txomeai_connect(paste(domain, path, sep="/"))
-#' assets = report$ls[report$ls$key == "assets", ]
+#' domain <- "https://txomeai.oceangenomics.com"
+#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' report <- txomeai_connect(paste(domain, path, sep="/"))
+#' assets <- report$ls[report$ls$key == "assets", ]
 #' txomeai_display(report, assets[1,])
-txomeai_display = function(txomeai, ls_row)
+txomeai_display <- function(txomeai, ls_row)
 {
     if(!all(colnames(txomeai$ls) %in% colnames(ls_row)))
     {
         print("Input row did not have the expected format")
         return()
     }
-    r = download_asset(txomeai, ls_row$name)
+    r <- download_asset(txomeai, ls_row$name)
     if(r$status_code != 200)
     {
         cat("Failed to download svg file with HTML code: ", r$status_code, "\n")
         return()
     }
-    img = image_read(r$path)
-    displayed = tryCatch(
+    img <- image_read(r$path)
+    displayed <- tryCatch(
         {
             image_display(img)
             TRUE
@@ -248,7 +248,7 @@ txomeai_display = function(txomeai, ls_row)
     {
         return(r$path)
     }
-    displayed = tryCatch(
+    displayed <- tryCatch(
         {
             image_browse(img)
             TRUE
