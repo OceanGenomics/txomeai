@@ -26,13 +26,15 @@ txomeai_login <- function(txomeai)
 #' @importFrom urltools url_parse
 #' @importFrom BiocFileCache bfccache
 #' @importFrom utils read.csv
-#' @param url The report URL to connect to
+#' @param url The report URL
 #' @return A constructed list connection object.
 #'    \item{url}{The URL used to access the API data.}
 #'    \item{CAS}{The ID of the analysis.}
 #'    \item{instance}{The ID of the report.}
 #'    \item{dir}{The path to the query cache location.}
-#'    \item{meta}{A table with sample meta data.}
+#'    \item{sample_meta}{A table with sample meta data.}
+#'    \item{comparative_meta}{A table with comparative analysis meta data.}
+#'    \item{assets}{(Experimental) A table of svg plots in the report. }
 #'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples dontrun
@@ -202,24 +204,23 @@ txomeai_get <- function(txomeai, tableName, tableKey=NULL)
 #'
 #' @export
 #' @import magick
-#' @description This function will display a downloaded SVG in whatever way is available.
-#' @param txomeai The connection object that cookie has expired.
-#' @param ls_row An asset row from the ls table.
+#' @description An experimental function to display a report SVG in whatever way is available.
+#' @param txomeai The connection object.
+#' @param row A row from the txomeai$assets table.
 #' @return The SVG path if download is successful, null otherwise.
 #' @examples dontrun
 #' domain <- "https://txomeai.oceangenomics.com"
 #' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
-#' assets <- report$ls[report$ls$key == "assets", ]
-#' txomeai_display(report, assets[1,])
-txomeai_display <- function(txomeai, ls_row)
+#' txomeai_display(report, report$assets[1,])
+txomeai_display <- function(txomeai, row)
 {
-    if(!all(colnames(txomeai$ls) %in% colnames(ls_row)))
+    if(!all(colnames(txomeai$ls) %in% colnames(row)))
     {
         print("Input row did not have the expected format")
         return()
     }
-    r <- download_asset(txomeai, ls_row$name)
+    r <- download_asset(txomeai, row$name)
     if(r$status_code != 200)
     {
         cat("Failed to download svg file with HTML code: ", r$status_code, "\n")
