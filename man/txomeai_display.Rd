@@ -4,24 +4,23 @@
 \alias{txomeai_display}
 \title{Display a svg diagram.}
 \usage{
-txomeai_display(txomeai, ls_row)
+txomeai_display(txomeai, row)
 }
 \arguments{
-\item{txomeai}{The connection object that cookie has expired.}
+\item{txomeai}{The connection object.}
 
-\item{ls_row}{An asset row from the ls table.}
+\item{row}{A row from the txomeai$assets table.}
 }
 \value{
 The SVG path if download is successful, null otherwise.
 }
 \description{
-This function will display a downloaded SVG in whatever way is available.
+An experimental function to display a report SVG in whatever way is available.
 }
 \examples{
 dontrun
 domain <- "https://txomeai.oceangenomics.com"
 path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 report <- txomeai_connect(paste(domain, path, sep="/"))
-assets <- report$ls[report$ls$key == "assets", ]
-txomeai_display(report, assets[1,])
+txomeai_display(report, report$assets[1,])
 }

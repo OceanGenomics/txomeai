@@ -7,7 +7,7 @@
 txomeai_connect(url)
 }
 \arguments{
-\item{url}{The report URL to connect to}
+\item{url}{The report URL}
 }
 \value{
 A constructed list connection object.
@@ -15,7 +15,9 @@ A constructed list connection object.
    \item{CAS}{The ID of the analysis.}
    \item{instance}{The ID of the report.}
    \item{dir}{The path to the query cache location.}
-   \item{meta}{A table with sample meta data.}
+   \item{sample_meta}{A table with sample meta data.}
+   \item{comparative_meta}{A table with comparative analysis meta data.}
+   \item{assets}{(Experimental) A table of svg plots in the report. }
    \item{ls}{A summary table of all the available data.}
 }
 \description{
