@@ -295,25 +295,26 @@ update_glossary <- function(txomeai)
     txomeai$sample <- vector("list", length(txomeai$data$app))
     for(i in seq_len(length(txomeai$data$app)))
     {
+        txomeai$meta[[i]] <- data.frame()
+        txomeai$sample[[i]] <- data.frame()
         app <- txomeai$data[i, "app"]
         r <- download_file(txomeai, paste(app, "meta.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$meta[[i]] <- read.csv(r$path, header=TRUE)
-        }
-        else 
-        {
-            txomeai$meta[[i]] <- data.frame()
+            
+            m <- read.csv(r$path, header=TRUE)
+            if(all(c("tableName", "stepName", "filename", "set1", "set2") %in% colnames(m))){
+                txomeai$meta[[i]] <- m
+            } 
         }
 
         r <- download_file(txomeai, paste(app, "sample.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            txomeai$sample[[i]] <- read.csv(r$path, header=TRUE)
-        }
-        else 
-        {
-            txomeai$sample[[i]] <- data.frame()
+            s <- read.csv(r$path, header=TRUE)
+            if(all(c("sample","sampleName") %in% colnames(s))){
+                txomeai$sample[[i]] <- s
+            }
         }
     }
     names(txomeai$meta) <- txomeai$data$app
