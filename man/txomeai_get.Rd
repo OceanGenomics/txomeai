@@ -4,14 +4,14 @@
 \alias{txomeai_get}
 \title{Get data from the Txome.AI anaylsis report.}
 \usage{
-txomeai_get(txomeai, tableName, tableKey = NULL)
+txomeai_get(connection, tableName, tableKey = NULL)
 }
 \arguments{
-\item{txomeai}{The connection object returned from txomeai_connect.}
+\item{connection}{The connection object returned from txomeai_connect.}
 
-\item{tableName}{A name column value from the ls table.}
+\item{tableName}{A name column value from the ls table (see txomeai_connect).}
 
-\item{tableKey}{An optional key value from the ls table.}
+\item{tableKey}{An optional key value from the ls table (see txomeai_connect).}
 }
 \value{
 A data.table with all results.

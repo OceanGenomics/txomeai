@@ -4,12 +4,12 @@
 \alias{txomeai_display}
 \title{Display a svg diagram.}
 \usage{
-txomeai_display(txomeai, row)
+txomeai_display(connection, row)
 }
 \arguments{
-\item{txomeai}{The connection object.}
+\item{connection}{The connection object.}
 
-\item{row}{A row from the txomeai$assets table.}
+\item{row}{A row from the connection$assets table.}
 }
 \value{
 The SVG path if download is successful, null otherwise.

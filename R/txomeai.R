@@ -112,16 +112,16 @@ txomeai_connect <- function(url)
 #'
 #' @export
 #' @import data.table
-#' @param txomeai The connection object returned from txomeai_connect.
-#' @param tableName A name column value from the ls table.
-#' @param tableKey An optional key value from the ls table.
+#' @param connection The connection object returned from txomeai_connect.
+#' @param tableName A name column value from the ls table (see txomeai_connect).
+#' @param tableKey An optional key value from the ls table (see txomeai_connect).
 #' @return A data.table with all results.
 #' @examples dontrun
 #' domain <- "https://txomeai.oceangenomics.com"
 #' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' report_fastp <- txomeai_get(report, "FastpJSON")
-txomeai_get <- function(txomeai, tableName, tableKey=NULL)
+txomeai_get <- function(connection, tableName, tableKey=NULL)
 {
     to_return <- NULL
     header <- NULL
@@ -132,12 +132,12 @@ txomeai_get <- function(txomeai, tableName, tableKey=NULL)
     sub <- NULL
     key <- NULL
     # Error checking
-    if(!(tableName %in% txomeai$ls$name))
+    if(!(tableName %in% connection$ls$name))
     {
         message(sprintf("Error: table name '%s' not found.", tableName))
         return(NULL)
     }
-    if(!is.null(tableKey) && !(tableKey %in% txomeai$ls$key))
+    if(!is.null(tableKey) && !(tableKey %in% connection$ls$key))
     {
         message(sprintf("Error: table key '%s' not found.", tableKey))
         return(NULL)
@@ -145,11 +145,11 @@ txomeai_get <- function(txomeai, tableName, tableKey=NULL)
 
     if(is.null(tableKey))
     {
-        sub <- txomeai$ls[name == tableName, ]
+        sub <- connection$ls[name == tableName, ]
     } else if (is.na(tableKey)) {
-        sub <- txomeai$ls[name == tableName & is.na(key), ]
+        sub <- connection$ls[name == tableName & is.na(key), ]
     } else {
-        sub <- txomeai$ls[name == tableName & key == tableKey,]
+        sub <- connection$ls[name == tableName & key == tableKey,]
     }
 
     if(nrow(sub) == 0) {
@@ -160,13 +160,13 @@ txomeai_get <- function(txomeai, tableName, tableKey=NULL)
     # Handle meta data and assets
     if(nrow(sub) == 1 && is.na(sub$key[[1]]))
     {
-        return(data.table(fetch(sub$name[[1]], sub$key[[1]], txomeai)))
+        return(data.table(fetch(sub$name[[1]], sub$key[[1]], connection)))
     } else if (nrow(sub) == 1 && sub$key[[1]] == "assets"){
-        return(txomeai_display(txomeai, sub[1,]))
+        return(txomeai_display(connection, sub[1,]))
     }
     
     # Get raw list results for each row and add to data.table as column 'get'
-    sub$get <- apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, txomeai)
+    sub$get <- apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, connection)
     # Return results if data_type isn't table
     if(sub$get[[1]]$data_type != "table")
     {
@@ -205,22 +205,22 @@ txomeai_get <- function(txomeai, tableName, tableKey=NULL)
 #' @export
 #' @import magick
 #' @description An experimental function to display a report SVG in whatever way is available.
-#' @param txomeai The connection object.
-#' @param row A row from the txomeai$assets table.
+#' @param connection The connection object.
+#' @param row A row from the connection$assets table.
 #' @return The SVG path if download is successful, null otherwise.
 #' @examples dontrun
 #' domain <- "https://txomeai.oceangenomics.com"
 #' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' txomeai_display(report, report$assets[1,])
-txomeai_display <- function(txomeai, row)
+txomeai_display <- function(connection, row)
 {
-    if(!all(colnames(txomeai$ls) %in% colnames(row)))
+    if(!all(colnames(connection$ls) %in% colnames(row)))
     {
         print("Input row did not have the expected format")
         return()
     }
-    r <- download_asset(txomeai, row$name)
+    r <- download_asset(connection, row$name)
     if(r$status_code != 200)
     {
         cat("Failed to download svg file with HTML code: ", r$status_code, "\n")
