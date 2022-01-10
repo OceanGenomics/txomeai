@@ -15,7 +15,7 @@ Authors@R: c(person(given = "Joshua",
 Author: Joshua Katz [aut], Ocean Genomics [cre, cph]
 Description: This package is the API interface to txome.ai RNA-seq Analysis reports. 
 License: MIT + file LICENSE
-Imports: getPass, urltools, jsonlite, BiocFileCache, utils
-Depends: data.table, httr, magick
+Imports: getPass, urltools (>= 1.7.3), jsonlite (>= 1.7.2), BiocFileCache (>= 1.14.0), utils (>= 4.0.3)
+Depends: data.table (>= 1.14.2), httr (>= 1.4.2), magick (>= 2.7.3)
 biocViews: Workflow, GeneExpressionWorkflow, Software, , Infrastructure, DataImport 
 RoxygenNote: 7.1.2
