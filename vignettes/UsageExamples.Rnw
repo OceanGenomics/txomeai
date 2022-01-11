@@ -21,9 +21,12 @@ sample_count = length(unique(contam$key))
 result_type = length(unique(contam$type))
 contam_matrix = matrix(contam$ratio, nrow=result_type, ncol=sample_count, 
     dimnames=list(unique(contam$type), unique(contam$key)))
-par(las=2)
+par(las=2, mar=c(7,5,2,0))
 barplot(contam_matrix, ylab="Proportion")
 @
+\begin{center}
+\includegraphics{barplot}
+\end{center}
 
 \section{ Transcript Integrity Figure }
 
@@ -38,6 +41,9 @@ tis = txomeai::txomeai_get(report, "TranscriptIntegrityStats")
 hist(tis$get[[1]]$data$raw$transcript_stats$tin, 
     main=tis$description[[1]], breaks=100, xlab="TIN")
 @
+\begin{center}
+\includegraphics{tis}
+\end{center}
 
 \section{ Spearman Correlation Heatmap }
 
@@ -49,8 +55,11 @@ and provide one meta data column to build the desired heatmap.
 report = txomeai::txomeai_connect(url)
 spearman = txomeai::txomeai_get(report, "SpearmanCorrelation")
 heatmap(as.matrix(spearman[,2:(length(colnames(spearman))-1)]), 
-    labRow=spearman$sample, main="Spearman Correlation")
+    labRow=spearman$sample, main="Spearman Correlation", margin=c(6,6))
 @
+\begin{center}
+\includegraphics{spearman}
+\end{center}
 
 \section{ High Variance Genes Figure }
 
@@ -76,10 +85,10 @@ plot_points = expression_df[expression_df$gene_index <= plot_count,]
 plot_points$sample = as.factor(plot_points$sample)
 min_exp = min(plot_points$expression)
 max_exp = max(plot_points$expression)
-x_max = max_exp + (0.2 * max_exp)
-par(mar=c(3,6,1,1))
+x_max = max_exp + (0.4 * (max_exp-min_exp))
+par(mar=c(5,6,1,1))
 plot(expression_mean[1:plot_count], 1:plot_count, xlim=c(min_exp,x_max), 
-    type='l', axes=FALSE)
+    type='l', axes=FALSE, ylab="", xlab="Log(1+TPM)")
 points(plot_points$expression, plot_points$gene_index, col=plot_points$sample, 
     type="p", pch=20)
 axis(1)
@@ -88,5 +97,8 @@ axis(2, labels=gene_names[1:plot_count], at=1:plot_count)
 legend(max_exp, plot_count, levels(plot_points$sample), 
     col=1:sample_count, pch=20)
 @
+\begin{center}
+\includegraphics{hvg}
+\end{center}
 
 \end{document}
