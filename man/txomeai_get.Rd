@@ -9,9 +9,9 @@ txomeai_get(connection, tableName, tableKey = NULL)
 \arguments{
 \item{connection}{The connection object returned from txomeai_connect.}
 
-\item{tableName}{A name column value from the ls table (see txomeai_connect).}
+\item{tableName}{A name column value from the ls table (see txomeai_connect ls table).}
 
-\item{tableKey}{An optional key value from the ls table (see txomeai_connect).}
+\item{tableKey}{An optional key value from the ls table (see txomeai_connect ls table).}
 }
 \value{
 A data.table with all results.

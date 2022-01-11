@@ -28,19 +28,26 @@ txomeai_login <- function(txomeai)
 #' @importFrom utils read.csv
 #' @param url The report URL
 #' @return A constructed list connection object.
+#'    \item{ls}{A summary table of all the available data.}
+#'    \item{sample_meta}{A table with sample meta data.}
+#'    \item{comparative_meta}{A table with comparative analysis meta data.}
 #'    \item{url}{The URL used to access the API data.}
 #'    \item{CAS}{The ID of the analysis.}
 #'    \item{instance}{The ID of the report.}
 #'    \item{dir}{The path to the query cache location.}
-#'    \item{sample_meta}{A table with sample meta data.}
-#'    \item{comparative_meta}{A table with comparative analysis meta data.}
 #'    \item{assets}{(Experimental) A table of svg plots in the report. }
-#'    \item{ls}{A summary table of all the available data.}
 #' @references https://txomeai.oceangenomics.com/
 #' @examples dontrun
+#' # Basic connection example
 #' domain <- "https://txomeai.oceangenomics.com"
 #' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
+#' # View all the available analysis tables
+#' unique(report$ls$name)
+#' # View sample meta data table
+#' report$sample_meta
+#' # View comparative analysis meta data table
+#' report$comparative_meta
 txomeai_connect <- function(url) 
 {
     txomeai <- list()
@@ -113,8 +120,8 @@ txomeai_connect <- function(url)
 #' @export
 #' @import data.table
 #' @param connection The connection object returned from txomeai_connect.
-#' @param tableName A name column value from the ls table (see txomeai_connect).
-#' @param tableKey An optional key value from the ls table (see txomeai_connect).
+#' @param tableName A name column value from the ls table (see txomeai_connect ls table).
+#' @param tableKey An optional key value from the ls table (see txomeai_connect ls table).
 #' @return A data.table with all results.
 #' @examples dontrun
 #' domain <- "https://txomeai.oceangenomics.com"

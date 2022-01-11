@@ -11,23 +11,30 @@ txomeai_connect(url)
 }
 \value{
 A constructed list connection object.
+   \item{ls}{A summary table of all the available data.}
+   \item{sample_meta}{A table with sample meta data.}
+   \item{comparative_meta}{A table with comparative analysis meta data.}
    \item{url}{The URL used to access the API data.}
    \item{CAS}{The ID of the analysis.}
    \item{instance}{The ID of the report.}
    \item{dir}{The path to the query cache location.}
-   \item{sample_meta}{A table with sample meta data.}
-   \item{comparative_meta}{A table with comparative analysis meta data.}
    \item{assets}{(Experimental) A table of svg plots in the report. }
-   \item{ls}{A summary table of all the available data.}
 }
 \description{
 Build a connection object to a RNA-seq analysis report
 }
 \examples{
 dontrun
+# Basic connection example
 domain <- "https://txomeai.oceangenomics.com"
 path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
 report <- txomeai_connect(paste(domain, path, sep="/"))
+# View all the available analysis tables
+unique(report$ls$name)
+# View sample meta data table
+report$sample_meta
+# View comparative analysis meta data table
+report$comparative_meta
 }
 \references{
 https://txomeai.oceangenomics.com/
