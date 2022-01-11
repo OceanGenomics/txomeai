@@ -1,3 +1,4 @@
+%\VignetteIndexEntry{Usage Examples}
 \documentclass[a4paper]{article}
 \title{ txome.ai R API Examples }
 \author{ Joshua P. Katz }
