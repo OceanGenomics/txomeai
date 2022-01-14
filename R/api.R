@@ -27,6 +27,7 @@ download_file <- function(txomeai, filename, key="", overwrite=FALSE)
         {
             file.remove(outfile)
         }
+        message("Query failed: ", downloadURL$path)
         resp <- list(status_code=r$status_code, path=outfile)
     }
     else
@@ -210,7 +211,7 @@ local_connect <- function(url, dir=".")
     }
     else 
     {
-        message("Query failed: ", response$status_code, "\n")
+        message("Query error: ", response$status_code, "\n")
         return()
     }
     return(update_glossary(txomeai))
