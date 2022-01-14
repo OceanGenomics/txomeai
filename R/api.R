@@ -25,7 +25,6 @@ download_file <- function(txomeai, filename, key="", overwrite=FALSE)
         r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
         if(r$status_code != 200 && file.exists(outfile))
         {
-            message("Query failed: ", downloadURL$path)
             file.remove(outfile)
         }
         resp <- list(status_code=r$status_code, path=outfile)
