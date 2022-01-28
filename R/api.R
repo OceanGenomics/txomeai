@@ -1,3 +1,42 @@
+#' Download an API path
+#' 
+#' @param path the API path to download
+#' @param filename the filename of the file to download.
+#' @param key a string that uniquely identifies the correct file. 
+#' @return a list with $status_code and $path to downloaded file.
+#' @noRd
+download_path <- function(txomeai, path, filename, key="", overwrite=FALSE)
+{
+    downloadURL <- txomeai$url
+    downloadURL$path <- path
+    key_dir <- txomeai$dir
+    if(!is.na(key) && nchar(key) > 0)
+    {
+        key_dir <- file.path(txomeai$dir, key)
+        downloadURL$path <- paste(txomeai$url$path, key, filename, sep="/")
+    }
+    if(!dir.exists(key_dir))
+    {
+        dir.create(key_dir)
+    }
+    outfile <- file.path(key_dir, filename)
+    resp <- NULL
+    if(!file.exists(outfile) || overwrite)
+    {
+        r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
+        if(r$status_code != 200 && file.exists(outfile))
+        {
+            file.remove(outfile)
+        }
+        resp <- list(status_code=r$status_code, path=outfile)
+    }
+    else
+    {
+        resp <- list(status_code=200, path=outfile)
+    }
+    return(resp)
+}
+
 #' Download an API file
 #' 
 #' @param filename the filename of the file to download.
