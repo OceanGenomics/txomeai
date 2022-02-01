@@ -1,42 +1,3 @@
-#' Download an API path
-#' 
-#' @param path the API path to download
-#' @param filename the filename of the file to download.
-#' @param key a string that uniquely identifies the correct file. 
-#' @return a list with $status_code and $path to downloaded file.
-#' @noRd
-download_path <- function(txomeai, path, filename, key="", overwrite=FALSE)
-{
-    downloadURL <- txomeai$url
-    downloadURL$path <- path
-    key_dir <- txomeai$dir
-    if(!is.na(key) && nchar(key) > 0)
-    {
-        key_dir <- file.path(txomeai$dir, key)
-        downloadURL$path <- paste(txomeai$url$path, key, filename, sep="/")
-    }
-    if(!dir.exists(key_dir))
-    {
-        dir.create(key_dir)
-    }
-    outfile <- file.path(key_dir, filename)
-    resp <- NULL
-    if(!file.exists(outfile) || overwrite)
-    {
-        r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
-        if(r$status_code != 200 && file.exists(outfile))
-        {
-            file.remove(outfile)
-        }
-        resp <- list(status_code=r$status_code, path=outfile)
-    }
-    else
-    {
-        resp <- list(status_code=200, path=outfile)
-    }
-    return(resp)
-}
-
 #' Download an API file
 #' 
 #' @param filename the filename of the file to download.
@@ -94,7 +55,6 @@ download_asset <- function(txomeai, filename)
 #' @param name The name column value from the ls table
 #' @param key The key column value from the ls table
 #' @param txomeai The report connection object
-#' @param ls_row A row from the ls data.table
 #' @return a list containing the raws data
 #' @noRd
 fetch <- function(name, key, txomeai)
@@ -103,7 +63,12 @@ fetch <- function(name, key, txomeai)
     {
         return(get_sample_meta(txomeai, name))
     }
-    file <- paste(name, "json.gz", sep=".")
+    file <- name
+    if(substring(name, nchar(name)-7) != ".json.gz")
+    {
+        file <- paste(name, "json.gz", sep=".")
+    }
+
     r <- download_file(txomeai, file, key)
     if(r$status_code == 200)
     {
@@ -275,8 +240,8 @@ build_ls <- function(txomeai)
     {
         return(txomeai$ls)
     }
-    table_header <- c("key", "name", "description")
-    tables <- data.table(matrix(ncol=3,nrow=0))
+    table_header <- c("key", "name", "description", "path")
+    tables <- data.table(matrix(ncol=4,nrow=0))
     for(s in txomeai$sample)
     {
         if(length(colnames(s)) == 0)
@@ -291,11 +256,11 @@ build_ls <- function(txomeai)
                 # Testing if the value path starts with sample works for local analysis
                 if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
                 {
-                    tables <- rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"]))
+                    tables <- rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"], s[i,c]))
                 }
                 else
                 {
-                    tables <- rbind(tables, list(NA, c, "Meta data"))
+                    tables <- rbind(tables, list(NA, c, "Meta data", NA))
                     break
                 }
             }
@@ -308,11 +273,12 @@ build_ls <- function(txomeai)
             for(i in seq_len(length(m$tableName)))
             {
                 if(m$stepName[i] == "all") {
-                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples"))
+                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples", m$apiQueryPath[i]))
                 } else if (m$stepName[i] == "assets") {
-                    tables <- rbind(tables, list(m$stepName[i], m$filename[i], "An image file"))
+                    parts = unlist(strsplit(m$apiQueryPath[i], "/", fixed=TRUE))
+                    tables <- rbind(tables, list(m$stepName[i], parts[length(parts)], "An image file", m$apiQueryPath[i]))
                 } else {
-                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i])))
+                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i]), m$apiQueryPath[i]))
                 }
             }
         }
