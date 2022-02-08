@@ -13,9 +13,14 @@ txomeai_login <- function(txomeai)
     {
         return(TRUE)
     }
+    else if(resp$status_code == 401) 
+    {
+        message("Username or password are incorrect.")
+        return(FALSE)
+    }
     else
     {
-        message("Failed to login with http code: ", resp$status_code)
+        message("Failed to login with unexpected http code: ", resp$status_code)
         return(FALSE)
     }
 }
