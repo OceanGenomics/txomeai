@@ -1,3 +1,8 @@
+#' Gloabl used to only authenticate when necessary
+#' @noRd 
+auth <- new.env()
+auth$is_authenticated = FALSE
+
 #' Download an API file
 #' 
 #' @param filename the filename of the file to download.
@@ -22,6 +27,11 @@ download_file <- function(txomeai, filename, key="", overwrite=FALSE)
     resp <- NULL
     if(!file.exists(outfile) || overwrite)
     {
+        # Only require authentication when accessing a non-cached file
+        if(!auth$is_authenticated)
+        {
+            txomeai_login(txomeai)
+        }
         r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
         if(r$status_code != 200 && file.exists(outfile))
         {
@@ -306,7 +316,6 @@ update_glossary <- function(txomeai)
         r <- download_file(txomeai, paste(app, "meta.csv", sep="."))
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
-            
             m <- read.csv(r$path, header=TRUE)
             if(all(c("tableName", "stepName", "filename", "set1", "set2") %in% colnames(m))){
                 txomeai$meta[[i]] <- m

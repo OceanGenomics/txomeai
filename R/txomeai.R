@@ -1,8 +1,7 @@
-#' Used to login, only use this function if you have a connection object and authentication is failing
+#' Used to login to the Ocean Genomics server
 #'
 #' @importFrom getPass getPass
 #' @param txomeai The connection object
-#' @return True if login was successful, false otherwise.
 #' @noRd
 txomeai_login <- function(txomeai)
 {
@@ -11,17 +10,17 @@ txomeai_login <- function(txomeai)
     resp <- httr::POST(urltools::url_compose(login), body=list(username=readline("Enter username: "), password=getPass::getPass("Enter password: ")), encode="json")
     if(resp$status_code == 200)
     {
-        return(TRUE)
+        auth$is_authenticated <- TRUE
     }
     else if(resp$status_code == 401) 
     {
         message("Username or password are incorrect.")
-        return(FALSE)
+        auth$is_authenticated <- FALSE
     }
     else
     {
         message("Failed to login with unexpected http code: ", resp$status_code)
-        return(FALSE)
+        auth$is_authenticated <- FALSE
     }
 }
 
@@ -91,15 +90,6 @@ txomeai_connect <- function(url)
     }
     txomeai$url$path <- paste("api", "pipeline-output", workingCAS, workingInstance, "report", "json", sep="/")
 
-    if(!test_auth(txomeai))
-    {        
-        if(!txomeai_login(txomeai))
-        {
-            message("Login failed\n")
-            return()
-        }
-    }
-    
     # Check for API data
     response <- download_file(txomeai, "data.csv")
 
