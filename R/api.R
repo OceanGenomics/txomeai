@@ -30,6 +30,7 @@ download_file <- function(txomeai, filename, key="", overwrite=FALSE)
         # Only require authentication when accessing a non-cached file
         if(!auth$is_authenticated)
         {
+            message(outfile)
             txomeai_login(txomeai)
         }
         r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
@@ -317,7 +318,7 @@ update_glossary <- function(txomeai)
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
             m <- read.csv(r$path, header=TRUE)
-            if(all(c("tableName", "stepName", "filename", "set1", "set2") %in% colnames(m))){
+            if(all(c("tableName", "stepName", "apiQueryPath", "set1", "set2") %in% colnames(m))){
                 txomeai$meta[[i]] <- m
             } 
         }
@@ -454,25 +455,25 @@ test_txomeai <- function(url, output="Results.Rhistory")
     {
         all_passed <- all_passed & tryCatch(
             {
-                message(paste("Start testing table: ", tables[i,], "\n"))
+                message("Start testing table: ", tables[i,])
                 f <- txomeai_get(tables[i,], report)
                 TRUE
             },
             error=function(cond)
             {
-                message(paste("txomeai_get failed on: ", tables[i,], "\n"))
+                message("txomeai_get failed on: ", tables[i,])
                 message("Error:")
                 message(cond, "\n")
                 return(FALSE)
             },
             warning=function(cond)
             {
-                message(paste("Warning during processing table: ", tables[i,], "\n"))
+                message("Warning during processing table: ", tables[i,])
                 message("Warning: ")
                 message(cond, "\n")
                 return(FALSE)
             },
-            finally=message(paste("Finish testing table: ", tables[i,], "\n"))
+            finally=message("Finish testing table: ", tables[i,])
         )
     }
     sink()

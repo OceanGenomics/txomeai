@@ -1,0 +1,2 @@
+tableName,stepName,apiQueryPath,set1,set2
+DifferentialGeneExpression,dge_group1_vs_group2,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/dge_group1_vs_group2/DifferentialGeneExpression.json.gz,group1,group2
