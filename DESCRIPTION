@@ -3,15 +3,15 @@ Type: Package
 Title: API access to Ocean Genomics txome.ai RNA-seq Analysis
 Version: 0.99.0
 Date: 2021-11-16
-Maintainer: Ocean Genomics <support@oceangenomics.com>
+Maintainer: Guillaume Marçais <gmarcais@oceangenomics.com>
 Authors@R: c(person(given = "Joshua",
               family = "Katz",
               role = c("aut"),
               email = "josh@oceangenomics.com"),
-        person(given = "Ocean",
-              family = "Genomics",
+        person(given = "Guillaume",
+              family = "Marçais",
               role = c("cre", "cph"),
-              email = "support@oceangenomics.com"))
+              email = "gmarcais@oceangenomics.com"))
 Author: Joshua Katz [aut], Ocean Genomics [cre, cph]
 Description: This package is a wrapper for the API interface to txome.ai RNA-seq Analysis reports. 
       It handles authentication and query munging for simplified data access.
