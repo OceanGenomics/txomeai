@@ -30,10 +30,10 @@ download_file <- function(txomeai, filename, key="", overwrite=FALSE)
         # Only require authentication when accessing a non-cached file
         if(!auth$is_authenticated)
         {
-            message(outfile)
             txomeai_login(txomeai)
         }
-        r <- httr::GET(urltools::url_compose(downloadURL), httr::write_disk(outfile, overwrite=TRUE))
+        r <- httr::GET(urltools::url_compose(downloadURL), 
+            httr::write_disk(outfile, overwrite=TRUE))
         if(r$status_code != 200 && file.exists(outfile))
         {
             file.remove(outfile)
@@ -88,7 +88,7 @@ fetch <- function(name, key, txomeai)
     }
     else
     {
-        message("Failed to download: ", r$status_code)
+        warning("Failed to download: ", r$status_code, "\n", r$path)
         return(NULL)
     }
     return(r)
@@ -151,7 +151,8 @@ init_dir <- function(dir, cas, inst)
 #' @noRd
 get_sample_meta <- function(txomeai, table)
 {
-    col_index <- vapply(txomeai$sample, FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
+    col_index <- vapply(txomeai$sample, 
+        FUN=function(x){return(table %in% colnames(x));}, FUN.VALUE=TRUE)
     if(all(!col_index))
     {
         return(NULL)
@@ -204,10 +205,11 @@ local_connect <- function(url, dir=".")
     txomeai$instance <- workingInstance
     txomeai$dir <- init_dir(dir, workingCAS, workingInstance)
     # Test that the dir has been setup appropriately
-    if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
+    if(file.access(txomeai$dir, 0) != 0 || 
+        file.access(txomeai$dir, 2) != 0 || 
+        file.access(txomeai$dir, 4) != 0)
     {
-        message("Insufficent access to working directory:", txomeai$dir)
-        return()
+        stop("Insufficent access to working directory:", txomeai$dir)
     }
     parts[length(parts)] <- "json"
     txomeai$url$path <- paste(parts, collapse="/")
@@ -220,13 +222,12 @@ local_connect <- function(url, dir=".")
     }
     else if (response$status_code == 404) 
     {
-        message("API data is not available for this report. If it's an older report, re-run to generate API data.")
-        return()
+        stop("API data is not available for this report. ",
+            "If it's an older report, re-run to generate API data.")
     }
     else 
     {
-        message("Query error: ", response$status_code, "\n")
-        return()
+        stop("Query http code: ", response$status_code, "\n")
     }
     return(update_glossary(txomeai))
 }
@@ -241,7 +242,8 @@ local_connect <- function(url, dir=".")
 #' @return A data.table that each row represents a data query from the report.
 #' @examples
 #' domain <- "https://txomeai.oceangenomics.com"
-#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' path <- paste0("api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d",
+#'    "/2021-10-25T185916/report/index.html")
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' head(report$ls)
 #' @noRd
@@ -264,14 +266,18 @@ build_ls <- function(txomeai)
             for(i in seq_len(length(s[,1])))
             {
                 # Testing if the CAS is in the path works for web analysis
-                # Testing if the value path starts with sample works for local analysis
-                if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
+                # Testing if the value path starts with 
+                # sample works for local analysis
+                if(grepl(txomeai$CAS, s[i,c], fixed=TRUE) || 
+                    grepl(paste0(s[i,"sample"],"/"), s[i,c], fixed=TRUE))
                 {
-                    tables <- rbind(tables, list(s[i,"sample"], c, s[i,"sampleName"], s[i,c]))
+                    row <- list(s[i,"sample"], c, s[i,"sampleName"], s[i,c])
+                    tables <- rbind(tables, row)
                 }
                 else
                 {
-                    tables <- rbind(tables, list(NA, c, "Meta data", NA))
+                    row <- list(NA, c, "Meta data", NA)
+                    tables <- rbind(tables, row)
                     break
                 }
             }
@@ -279,20 +285,23 @@ build_ls <- function(txomeai)
     }
     for(m in txomeai$meta)
     {
-        if(length(m$tableName) > 0)
+        for(i in seq_len(length(m$tableName)))
         {
-            for(i in seq_len(length(m$tableName)))
-            {
-                if(m$stepName[i] == "all") {
-                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], "Step run against all samples", m$apiQueryPath[i]))
-                } else if (m$stepName[i] == "assets") {
-                    parts = unlist(strsplit(m$apiQueryPath[i], "/", fixed=TRUE))
-                    tables <- rbind(tables, list(m$stepName[i], parts[length(parts)], "An image file", m$apiQueryPath[i]))
-                } else {
-                    tables <- rbind(tables, list(m$stepName[i], m$tableName[i], sprintf("%s vs %s", m$set1[i], m$set2[i]), m$apiQueryPath[i]))
-                }
+            row <- list(m$stepName[i], m$tableName[i],
+                "Step run against all samples", m$apiQueryPath[i])
+            if(m$stepName[i] == "all") {
+                tables <- rbind(tables, row)
+            } else if (m$stepName[i] == "assets") {
+                parts = unlist(strsplit(m$apiQueryPath[i], "/", fixed=TRUE))
+                row[[2]] <- parts[length(parts)]
+                row[[3]] <- "An image file"
+                tables <- rbind(tables, row)
+            } else {
+                row[[3]] <- sprintf("%s vs %s", m$set1[i], m$set2[i])
+                tables <- rbind(tables, row)
             }
         }
+    
     }
     tables <- unique(tables)
     colnames(tables) <- table_header
@@ -309,6 +318,8 @@ update_glossary <- function(txomeai)
 {
     txomeai$meta <- vector("list", length(txomeai$data$app))
     txomeai$sample <- vector("list", length(txomeai$data$app))
+    meta_cols = c("tableName", "stepName", "apiQueryPath", "set1", "set2")
+    sample_cols = c("sample","sampleName")
     for(i in seq_len(length(txomeai$data$app)))
     {
         txomeai$meta[[i]] <- data.frame()
@@ -318,7 +329,7 @@ update_glossary <- function(txomeai)
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
             m <- read.csv(r$path, header=TRUE)
-            if(all(c("tableName", "stepName", "apiQueryPath", "set1", "set2") %in% colnames(m))){
+            if(all(meta_cols %in% colnames(m))){
                 txomeai$meta[[i]] <- m
             } 
         }
@@ -327,7 +338,7 @@ update_glossary <- function(txomeai)
         if(r$status_code == 200 & file.info(r$path)$size > 0)
         {
             s <- read.csv(r$path, header=TRUE)
-            if(all(c("sample","sampleName") %in% colnames(s))){
+            if(all(sample_cols %in% colnames(s))){
                 txomeai$sample[[i]] <- s
             }
         }
@@ -400,14 +411,11 @@ test_txomeai <- function(url, output="Results.Rhistory")
         txomeai_connect(url),
         error=function(cond)
         {
-            message("Failed on txomeai_connect: ")
-            message(cond, "\n")
-            return(NULL)
+            stop("txomeai_connect: ", cond)
         },
         warning=function(cond)
         {
-            message("Warning on txomeai_connect: ")
-            message(cond, "\n")
+            warning("txomeai_connect: ", cond)
             return(NULL)
         }
     )
@@ -418,22 +426,19 @@ test_txomeai <- function(url, output="Results.Rhistory")
         sink()
         sink(type="message")
         close(conn)
-        message("Connect failed without error or a warning.")
-        return(FALSE)
+        stop("Connect failed without error or a warning.")
     }
 
     tables <- tryCatch(
         build_ls(report),
         error=function(cond)
         {
-            message("Failed on txome_ls:")
-            message(cond, "\n")
+            warning("txome_ls:", cond)
             return(NULL)
         },
         warning=function(cond)
         {
-            message("Warnings on build_ls: ")
-            message(cond, "\n")
+            warning("build_ls: ", cond)
             return(NULL)
         }
     )
@@ -443,7 +448,7 @@ test_txomeai <- function(url, output="Results.Rhistory")
     {
         if(length(tables) == 0)
         {
-            message("No tables were returned.")
+            warning("No tables were returned.")
         }
         sink()
         sink(type="message")
@@ -461,16 +466,13 @@ test_txomeai <- function(url, output="Results.Rhistory")
             },
             error=function(cond)
             {
-                message("txomeai_get failed on: ", tables[i,])
-                message("Error:")
-                message(cond, "\n")
+                warning("txomeai_get failed on: ", tables[i,], "\n", cond)
                 return(FALSE)
             },
             warning=function(cond)
             {
-                message("Warning during processing table: ", tables[i,])
-                message("Warning: ")
-                message(cond, "\n")
+                warning("Issue during processing table: ", 
+                    tables[i,], "\n", cond)
                 return(FALSE)
             },
             finally=message("Finish testing table: ", tables[i,])

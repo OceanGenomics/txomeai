@@ -26,11 +26,14 @@ result types, and ratio of results. So all we need to do is create a matrix
 of the ratios with result types as rows and sample ids as columns.
 
 <<eval=TRUE>>=
-BiocFileCache::setBFCOption("CACHE",system.file("extdata", package="txomeai"))
-url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
-    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
-report <- txomeai::txomeai_connect(url)
-contam <- txomeai::txomeai_get(report, "ContaminationSummary")
+# These top commented lines show how you use txomeai_connect and txomeai_get on
+# an example report URL, that will collect the reports ContaminationSummary. 
+# url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
+#    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
+# report <- txomeai::txomeai_connect(url)
+# contam <- txomeai::txomeai_get(report, "ContaminationSummary")
+data(synth, package="txomeai")
+contam <- ContaminationSummary
 sample_count <- length(unique(contam$key))
 result_type <- length(unique(contam$type))
 contam_matrix <- matrix(contam$ratio, nrow=result_type, ncol=sample_count, 
@@ -51,11 +54,14 @@ is \textbf{transcript\_stats} and it can be directly referenced to build
 the expected histogram.
 
 <<eval=TRUE>>=
-BiocFileCache::setBFCOption("CACHE",system.file("extdata", package="txomeai"))
-url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
-    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
-report <- txomeai::txomeai_connect(url)
-tis <- txomeai::txomeai_get(report, "TranscriptIntegrityStats")
+# These top commented lines show how you use txomeai_connect and txomeai_get on
+# an example report URL, that will collect the reports TranscriptIntegrityStats. 
+# url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
+#    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
+# report <- txomeai::txomeai_connect(url)
+# tis <- txomeai::txomeai_get(report, "TranscriptIntegrityStats")
+data(synth, package="txomeai")
+tis <- TranscriptIntegrityStats
 hist(tis$get[[1]]$data$raw$transcript_stats$tin, 
     main=tis$description[[1]], breaks=100, xlab="TIN")
 @
@@ -71,11 +77,14 @@ with some additional meta data. We can directly reference the correlation values
 and provide one meta data column to build the desired heatmap.
 
 <<eval=TRUE>>=
-BiocFileCache::setBFCOption("CACHE",system.file("extdata", package="txomeai"))
-url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
-    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
-report <- txomeai::txomeai_connect(url)
-spearman <- txomeai::txomeai_get(report, "SpearmanCorrelation")
+# These top commented lines show how you use txomeai_connect and txomeai_get on
+# an example report URL, that will collect the reports SpearmanCorrelation. 
+# url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
+#    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
+# report <- txomeai::txomeai_connect(url)
+# spearman <- txomeai::txomeai_get(report, "SpearmanCorrelation")
+data(synth, package="txomeai")
+spearman <- SpearmanCorrelation
 heatmap(as.matrix(spearman[,2:(length(colnames(spearman))-1)]), 
     labRow=spearman$sample, main="Spearman Correlation", margin=c(6,6))
 @
@@ -93,11 +102,14 @@ measurements, and plot at most ten genes from the results.
 
 
 <<eval=TRUE>>=
-BiocFileCache::setBFCOption("CACHE",system.file("extdata", package="txomeai"))
-url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
-    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
-report <- txomeai::txomeai_connect(url)
-hvg <- txomeai::txomeai_get(report, "HighVarianceGenes")
+# These top commented lines show how you use txomeai_connect and txomeai_get on
+# an example report URL, that will collect the reports HighVarianceGenes. 
+# url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
+#    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
+# report <- txomeai::txomeai_connect(url)
+# hvg <- txomeai::txomeai_get(report, "HighVarianceGenes")
+data(synth, package="txomeai")
+hvg <- HighVarianceGenes
 expression_mean <- unlist(lapply(hvg$get[[1]]$data$raw$sample_expression, 
     FUN=function(x){return(mean(x$expression));}))
 expression_df <- do.call("rbind",hvg$get[[1]]$data$raw$sample_expression)
@@ -136,19 +148,22 @@ then the \textbf{key} column will differentiate each comparison if you download 
 results. This applies to all comparative analysis.
 
 <<eval=TRUE>>=
-BiocFileCache::setBFCOption("CACHE",system.file("extdata", package="txomeai"))
-url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
-    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
-report <- txomeai::txomeai_connect(url)
-dge_analysis <- report$ls[report$ls$name == "DifferentialGeneExpression",]
-dge <- txomeai::txomeai_get(report, "DifferentialGeneExpression", dge_analysis$key[[1]])
+# These top commented lines show how you use txomeai_connect and txomeai_get on
+# an example report URL, that will collect the reports first DifferentialGeneExpression. 
+# url <- paste0("https://txomeai.oceangenomics.com/api/pipeline-output/",
+#    "0e404ed8-091b-40ee-962e-0c43d4b568a7/2021-09-27T190652/report/index.html")
+# report <- txomeai::txomeai_connect(url)
+# dge_analysis <- report$ls[report$ls$name == "DifferentialGeneExpression",]
+# dge <- txomeai::txomeai_get(report, "DifferentialGeneExpression", dge_analysis$key[[1]])
+data(synth, package="txomeai")
+dge <- DifferentialGeneExpression
 # Collect analysis description
-dge_descr <- dge_analysis$description[[1]]
+dge_descr <- "Four vs Five"
 # Data cleanup 
 dge$pvalue <- as.numeric(dge$pvalue)
 dge$pvalue[dge$pvalue == 0] <- 1e-300
 dge$log2FoldChange <- as.numeric(dge$log2FoldChange)
-dge <- dge[!is.na(pvalue) & !is.na(log2FoldChange),]
+dge <- dge[!is.na(dge$pvalue) & !is.na(dge$log2FoldChange),]
 dge$log10s <- -1*log(dge$pvalue,10)
 dge <- dge[1:100,]
 # Build plot

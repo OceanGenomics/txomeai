@@ -1,6 +1,0 @@
-app,metaIndexPath,sampleIndexPath
-app_contamdetection,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_contamdetection.meta.csv,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_contamdetection.sample.csv
-app_expressioncluster,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_expressioncluster.meta.csv,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_expressioncluster.sample.csv
-app_hvg,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_hvg.meta.csv,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_hvg.sample.csv
-app_degene,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_degene.meta.csv,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_degene.sample.csv
-app_tintin,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_tintin.meta.csv,/api/pipeline-output/e744bfc8-07ac-4dfc-8217-cdb159d894cb/report/report/json/app_tintin.sample.csv

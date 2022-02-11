@@ -7,20 +7,23 @@ txomeai_login <- function(txomeai)
 {
     login <- txomeai$url
     login$path <- "api/accounts/password-login"
-    resp <- httr::POST(urltools::url_compose(login), body=list(username=readline("Enter username: "), password=getPass::getPass("Enter password: ")), encode="json")
+    resp <- httr::POST(urltools::url_compose(login), 
+        body=list(username=readline("Enter username: "), 
+        password=getPass::getPass("Enter password: ")), 
+        encode="json")
     if(resp$status_code == 200)
     {
         auth$is_authenticated <- TRUE
     }
     else if(resp$status_code == 401) 
     {
-        message("Username or password are incorrect.")
         auth$is_authenticated <- FALSE
+        stop("Username or password are incorrect.")
     }
     else
     {
-        message("Failed to login with unexpected http code: ", resp$status_code)
         auth$is_authenticated <- FALSE
+        stop("Unexpected login http code: ", resp$status_code)
     }
 }
 
@@ -44,7 +47,8 @@ txomeai_login <- function(txomeai)
 #' @examples dontrun
 #' # Basic connection example
 #' domain <- "https://txomeai.oceangenomics.com"
-#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' path <- paste0("api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/",
+#'    "2021-10-25T185916/report/index.html")
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' # View all the available analysis tables
 #' unique(report$ls$name)
@@ -59,34 +63,34 @@ txomeai_connect <- function(url)
     txomeai$url <- urltools::url_parse(url)
     txomeai$CAS <- ""
     txomeai$instance <- ""
-    if(!grepl("oceangenomics.com", txomeai$url$domain, fixed=TRUE) & !grepl("transcriptome.ai", txomeai$url$domain, fixed=TRUE))
+    if(!grepl("oceangenomics.com", txomeai$url$domain, fixed=TRUE) & 
+        !grepl("transcriptome.ai", txomeai$url$domain, fixed=TRUE))
     {
-        message("Error: URL destination is unexpected.")
-        return()
+        stop("URL domain is unexpected.")
     }
 
     parts <- unlist(strsplit(txomeai$url$path, "/"))
     if(length(parts) < 6) 
     {
-        message("Error: URL path is unexpected.")
-        return()
+        stop("URL path length is unexpected.")
     }
     meta <- get_cas_and_instance(parts)
     if(is.null(meta$cas) || is.null(meta$instance))
     {
-        message("Error: Expected elements not found in path.")
-        return()
+        stop("Expected elements not found in path.")
     }
     workingCAS <- meta$cas
     workingInstance <- meta$instance
     txomeai$CAS <- workingCAS
     txomeai$instance <- workingInstance
-    txomeai$dir <- init_dir(BiocFileCache::bfccache(), workingCAS, workingInstance)
+    txomeai$dir <- init_dir(BiocFileCache::bfccache(), 
+        workingCAS, workingInstance)
     # Test that the dir has been setup appropriately
-    if(file.access(txomeai$dir, 0) != 0 || file.access(txomeai$dir, 2) != 0 || file.access(txomeai$dir, 4) != 0)
+    if(file.access(txomeai$dir, 0) != 0 || 
+        file.access(txomeai$dir, 2) != 0 || 
+        file.access(txomeai$dir, 4) != 0)
     {
-        message("Insufficent access to working directory:", txomeai$dir)
-        return()
+        stop("Insufficent access to working directory:", txomeai$dir)
     }
     txomeai$url$path <- paste("api", "pipeline-output", workingCAS, workingInstance, "report", "json", sep="/")
 
@@ -99,13 +103,12 @@ txomeai_connect <- function(url)
     }
     else if (response$status_code == 404) 
     {
-        message("API data is not available for this report. If it's an older report, re-run to generate API data.")
-        return()
+        stop("API data is not available for this report. ",
+            "If it's an older report, re-run to generate API data.")
     }
     else 
     {
-        message("Query failed: ", response$status_code, "\n")
-        return()
+        stop("API query unexpected response: ", response$status_code)
     }
     return(update_glossary(txomeai))
 }
@@ -120,7 +123,8 @@ txomeai_connect <- function(url)
 #' @return A data.table with all results.
 #' @examples dontrun
 #' domain <- "https://txomeai.oceangenomics.com"
-#' path <- "api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/2021-10-25T185916/report/index.html"
+#' path <- paste0("api/pipeline-output/c444dfda-de51-4053-8cb7-881dd1b2734d/",
+#'    "2021-10-25T185916/report/index.html")
 #' report <- txomeai_connect(paste(domain, path, sep="/"))
 #' report_fastp <- txomeai_get(report, "FastpJSON")
 txomeai_get <- function(connection, tableName, tableKey=NULL)
@@ -136,13 +140,11 @@ txomeai_get <- function(connection, tableName, tableKey=NULL)
     # Error checking
     if(!(tableName %in% connection$ls$name))
     {
-        message(sprintf("Error: table name '%s' not found.", tableName))
-        return(NULL)
+        stop(sprintf("Table name '%s' not found.", tableName))
     }
     if(!is.null(tableKey) && !(tableKey %in% connection$ls$key))
     {
-        message(sprintf("Error: table key '%s' not found.", tableKey))
-        return(NULL)
+        stop(sprintf("Table key '%s' not found.", tableKey))
     }
 
     if(is.null(tableKey))
@@ -155,8 +157,7 @@ txomeai_get <- function(connection, tableName, tableKey=NULL)
     }
 
     if(nrow(sub) == 0) {
-        message("Failed to find requested data.")
-        return(NULL)
+        stop("Requested data not found.")
     }
     
     # Handle meta data and assets
@@ -168,7 +169,9 @@ txomeai_get <- function(connection, tableName, tableKey=NULL)
     }
     
     # Get raw list results for each row and add to data.table as column 'get'
-    sub$get <- apply(sub, FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, MARGIN=1, connection)
+    sub$get <- apply(sub, 
+        FUN=function(x,r){return(fetch(x["name"], x["key"], r));}, 
+        MARGIN=1, connection)
     # Return results if data_type isn't table
     if(sub$get[[1]]$data_type != "table")
     {
@@ -236,14 +239,12 @@ txomeai_display <- function(connection, row)
         },
         error=function(cond)
         {
-            message("Error on image_display: ")
-            message(cond, "\n")
+            message("image_display: ", cond)
             return(FALSE)
         },
         warning=function(cond)
         {
-            message("Warnings on image_display: ")
-            message(cond, "\n")
+            message("image_display: ", cond)
             return(TRUE)
         }
     )
@@ -258,14 +259,12 @@ txomeai_display <- function(connection, row)
         },
         error=function(cond)
         {
-            message("Error on image_browse: ")
-            message(cond, "\n")
+            message("image_browse: ", cond)
             return(FALSE)
         },
         warning=function(cond)
         {
-            message("Warnings on image_browse: ")
-            message(cond, "\n")
+            message("image_browse: ", cond)
             return(TRUE)
         }
     )
