@@ -12,7 +12,7 @@ Authors@R: c(person(given = "Joshua",
               family = "Marçais",
               role = c("cre", "cph"),
               email = "gmarcais@oceangenomics.com"))
-Author: Joshua Katz [aut], Ocean Genomics [cre, cph]
+Author: Joshua Katz [aut], Guillaume Marçais [cre, cph]
 Description: This package is a wrapper for the API interface to txome.ai RNA-seq Analysis reports. 
       It handles authentication and query munging for simplified data access.
 License: MIT + file LICENSE
